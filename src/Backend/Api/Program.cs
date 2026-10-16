@@ -1,6 +1,7 @@
 using EstrelaClick.Backend.Api.Endpoints;
 using EstrelaClick.Backend.Application;
 using EstrelaClick.Backend.Infrastructure;
+using EstrelaClick.Backend.Infrastructure.Persistence;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 
@@ -44,6 +45,9 @@ builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
+
+// Executa as migrações do EF Core no arranque da aplicação
+await app.ApplyDatabaseMigrationsAsync();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
