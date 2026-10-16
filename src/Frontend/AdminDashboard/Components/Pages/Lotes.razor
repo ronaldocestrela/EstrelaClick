@@ -1,0 +1,145 @@
+@page "/lotes"
+@inject IAdminApiClient ApiClient
+
+<PageTitle>Lotes & Impressão | EstrelaClick</PageTitle>
+
+<div style="display: flex; flex-direction: column; gap: var(--space-xl);">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-md);">
+        <div>
+            <h2 style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-text-primary);">Lotes Fabris e Exportação</h2>
+            <p style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">Gere lotes em massa e baixe pacotes unificados de alta definição (PNG 300 DPI e SVG) para birôs e corte a laser.</p>
+        </div>
+
+        <button type="button" class="btn-token-primary" @onclick="() => ExibirModalNovoLote = true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>Gerar Novo Lote</span>
+        </button>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(MensagemFeedback))
+    {
+        <div class="alert-token alert-token-success">
+            <span>@MensagemFeedback</span>
+        </div>
+    }
+
+    <div class="card-panel" style="padding: 0; overflow: hidden;">
+        <DataTable TItem="LoteItemDto"
+                   Items="@LotesExibidos"
+                   IsLoading="@IsCarregando"
+                   ShowSearch="true"
+                   SearchPlaceholder="Buscar por número do lote..."
+                   OnSearch="HandleSearch"
+                   EmptyMessage="Nenhum lote fabril encontrado.">
+            <HeaderTemplate>
+                <tr>
+                    <th>NÚMERO DO LOTE</th>
+                    <th>TOTAL PLACAS</th>
+                    <th>PENDENTES</th>
+                    <th>EM GRAVAÇÃO</th>
+                    <th>GRAVADAS</th>
+                    <th>VINCULADAS</th>
+                    <th>DATA CRIAÇÃO</th>
+                    <th style="text-align: right;">AÇÕES</th>
+                </tr>
+            </HeaderTemplate>
+            <RowTemplate Context="lote">
+                <tr>
+                    <td style="font-weight: var(--font-weight-semibold); color: var(--color-text-primary);">
+                        @lote.NumeroLote
+                    </td>
+                    <td>@lote.TotalPlacas</td>
+                    <td style="color: var(--color-neutral); font-weight: var(--font-weight-medium);">@lote.QuantidadeCriada</td>
+                    <td style="color: var(--color-info); font-weight: var(--font-weight-medium);">@lote.QuantidadeEmGravacao</td>
+                    <td style="color: var(--color-success); font-weight: var(--font-weight-medium);">@lote.QuantidadeGravada</td>
+                    <td style="color: var(--color-accent); font-weight: var(--font-weight-medium);">@lote.QuantidadeVinculada</td>
+                    <td style="color: var(--color-text-muted);">
+                        @lote.DataCriacaoUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                    </td>
+                    <td style="text-align: right;">
+                        <a href="@ApiClient.ObterUrlDownloadZipLote(lote.NumeroLote)"
+                           class="btn-token-primary"
+                           style="padding: var(--space-xs) var(--space-sm); font-size: var(--font-size-xs);"
+                           target="_blank"
+                           title="Baixar pacote .zip para gráfica e corte laser">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            <span>Download ZIP</span>
+                        </a>
+                    </td>
+                </tr>
+            </RowTemplate>
+        </DataTable>
+
+        @if (LotesFiltrados.Count > 0)
+        {
+            <PaginationControl CurrentPage="@PaginaAtual"
+                               TotalItems="@LotesFiltrados.Count"
+                               PageSize="@ItensPorPagina"
+                               OnPageChanged="HandlePageChanged" />
+        }
+    </div>
+</div>
+
+<EstrelaClick.Frontend.AdminDashboard.Components.Modais.GerarLoteModal
+    @bind-IsOpen="ExibirModalNovoLote"
+    OnLoteCriado="HandleLoteCriadoAsync" />
+
+@code {
+    public bool IsCarregando { get; set; } = true;
+    public bool ExibirModalNovoLote { get; set; }
+    public string? MensagemFeedback { get; set; }
+    public string TermoBusca { get; set; } = string.Empty;
+    public int PaginaAtual { get; set; } = 1;
+    public int ItensPorPagina { get; set; } = 10;
+
+    public List<LoteItemDto> TodosLotes { get; set; } = new();
+
+    public List<LoteItemDto> LotesFiltrados => string.IsNullOrWhiteSpace(TermoBusca)
+        ? TodosLotes
+        : TodosLotes.Where(l => l.NumeroLote.Contains(TermoBusca, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    public IReadOnlyList<LoteItemDto> LotesExibidos => LotesFiltrados
+        .Skip((PaginaAtual - 1) * ItensPorPagina)
+        .Take(ItensPorPagina)
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarLotesAsync();
+    }
+
+    private async Task CarregarLotesAsync()
+    {
+        IsCarregando = true;
+        var result = await ApiClient.ListarLotesAsync();
+        if (result.IsSuccess && result.Value is not null)
+        {
+            TodosLotes = result.Value.ToList();
+        }
+        IsCarregando = false;
+    }
+
+    private void HandleSearch(string termo)
+    {
+        TermoBusca = termo;
+        PaginaAtual = 1;
+    }
+
+    private void HandlePageChanged(int novaPagina)
+    {
+        PaginaAtual = novaPagina;
+    }
+
+    private async Task HandleLoteCriadoAsync(LoteCriadoDto novoLote)
+    {
+        MensagemFeedback = $"Lote '{novoLote.NumeroLote}' gerado com sucesso contendo {novoLote.QuantidadeCriada} placas!";
+        await CarregarLotesAsync();
+    }
+}

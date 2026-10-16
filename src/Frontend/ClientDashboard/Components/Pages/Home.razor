@@ -1,0 +1,162 @@
+@page "/"
+@rendermode InteractiveServer
+@inject IClientApiClient ClientApi
+
+<PageTitle>Visão Geral - Painel do Lojista EstrelaClick</PageTitle>
+
+<div style="margin-bottom: var(--space-xl);">
+    <h2 style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); margin-bottom: var(--space-2xs);">
+        Olá, Bem-vindo ao seu Painel!
+    </h2>
+    <p style="color: var(--color-text-secondary); font-size: var(--font-size-sm);">
+        Acompanhe o desempenho de suas placas NFC em tempo real e mantenha seus links atualizados.
+    </p>
+</div>
+
+@if (_carregando)
+{
+    <div style="padding: var(--space-2xl); text-align: center;">
+        <LoadingSpinner Message="Carregando visão geral..." IsCentered="true" />
+    </div>
+}
+else
+{
+    <div class="metrics-grid">
+        <MetricCard Title="Placas Ativas"
+                    Value="@_placas.Count.ToString()"
+                    Subtitle="Placas em operação na loja">
+            <Icon>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="4" width="20" height="16" rx="2"/>
+                    <line x1="2" y1="10" x2="22" y2="10"/>
+                </svg>
+            </Icon>
+        </MetricCard>
+
+        <MetricCard Title="Toques Registrados"
+                    Value="@(_analytics?.TotalToquesPeriodo.ToString("N0") ?? "0")"
+                    Subtitle="Últimos 30 dias">
+            <Icon>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </Icon>
+        </MetricCard>
+
+        <MetricCard Title="Toques Hoje"
+                    Value="@(_analytics?.TotalToquesHoje.ToString("N0") ?? "0")"
+                    Subtitle="Acessos físicos hoje">
+            <Icon>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+            </Icon>
+        </MetricCard>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-xl); margin-bottom: var(--space-xl);">
+        <div class="card-panel">
+            <div class="card-panel-header">
+                <h3 class="card-panel-title">Suas Placas em Destaque</h3>
+                <a href="placas" class="btn-token-secondary" style="font-size: var(--font-size-xs);">Gerenciar Todas</a>
+            </div>
+
+            @if (_placas.Count == 0)
+            {
+                <EmptyState Title="Nenhuma placa ativa"
+                            Description="Você ainda não ativou nenhuma placa para a sua loja." />
+            }
+            else
+            {
+                <table style="width: 100%; border-collapse: collapse; font-size: var(--font-size-sm);">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--color-border); text-align: left; color: var(--color-text-secondary);">
+                            <th style="padding: var(--space-sm);">Identificador</th>
+                            <th style="padding: var(--space-sm);">Destino Atual</th>
+                            <th style="padding: var(--space-sm);">Filtro 5★</th>
+                            <th style="padding: var(--space-sm); text-align: right;">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in _placas.Take(5))
+                        {
+                            <tr style="border-bottom: 1px solid var(--color-border-subtle);">
+                                <td style="padding: var(--space-sm);">
+                                    <code>@p.Slug.Substring(0, Math.Min(8, p.Slug.Length))...</code>
+                                </td>
+                                <td style="padding: var(--space-sm); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    <a href="@p.UrlDestino" target="_blank" rel="noopener noreferrer">@p.UrlDestino</a>
+                                </td>
+                                <td style="padding: var(--space-sm);">
+                                    <span class="badge" style="background-color: @(p.FiltroSatisfacaoAtivo ? "var(--color-success-bg)" : "var(--color-surface-hover)"); color: @(p.FiltroSatisfacaoAtivo ? "var(--color-success-text)" : "var(--color-text-secondary)"); padding: 2px 6px; border-radius: 4px; font-size: 11px;">
+                                        @(p.FiltroSatisfacaoAtivo ? "Ativo" : "Direto")
+                                    </span>
+                                </td>
+                                <td style="padding: var(--space-sm); text-align: right;">
+                                    <a href="placas" class="btn-token-secondary" style="padding: 2px 8px; font-size: 11px;">Editar</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+
+        <div class="card-panel">
+            <div class="card-panel-header">
+                <h3 class="card-panel-title">Ações Rápidas</h3>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: var(--space-sm); padding-top: var(--space-xs);">
+                <a href="ativar" class="btn-token-primary" style="text-align: center; width: 100%;">
+                    Ativar Nova Placa NFC
+                </a>
+                <a href="placas" class="btn-token-secondary" style="text-align: center; width: 100%;">
+                    Alterar Link de Destino
+                </a>
+                <a href="analytics" class="btn-token-secondary" style="text-align: center; width: 100%;">
+                    Ver Horários de Pico
+                </a>
+            </div>
+
+            <div style="margin-top: var(--space-lg); border-top: 1px solid var(--color-border); padding-top: var(--space-md); font-size: var(--font-size-xs); color: var(--color-text-secondary);">
+                <strong>Dica Pro:</strong> Ao trocar a URL da placa, o efeito é instantâneo no chip NFC e no QR Code sem precisar reimprimir nada.
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<PlacaItemDto> _placas = new();
+    private AnalyticsDto? _analytics;
+    private bool _carregando = true;
+
+    private Guid _empresaIdAtual = Guid.Parse("00000000-0000-0000-0000-000000000001");
+
+    protected override async Task OnInitializedAsync()
+    {
+        _carregando = true;
+        try
+        {
+            var placasTask = ClientApi.ListarPlacasAsync(_empresaIdAtual);
+            var analyticsTask = ClientApi.ObterAnalyticsAsync(_empresaIdAtual, dias: 30);
+
+            await Task.WhenAll(placasTask, analyticsTask);
+
+            if (placasTask.Result.IsSuccess && placasTask.Result.Value is not null)
+            {
+                _placas = placasTask.Result.Value.ToList();
+            }
+
+            if (analyticsTask.Result.IsSuccess)
+            {
+                _analytics = analyticsTask.Result.Value;
+            }
+        }
+        finally
+        {
+            _carregando = false;
+        }
+    }
+}

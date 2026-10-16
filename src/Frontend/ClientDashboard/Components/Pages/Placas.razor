@@ -1,0 +1,312 @@
+@page "/placas"
+@rendermode InteractiveServer
+@inject IClientApiClient ClientApi
+@inject IJSRuntime JS
+
+<PageTitle>Minhas Placas - EstrelaClick</PageTitle>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl);">
+    <div>
+        <h2 style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); margin-bottom: var(--space-2xs);">
+            Minhas Placas Inteligentes
+        </h2>
+        <p style="color: var(--color-text-secondary); font-size: var(--font-size-sm);">
+            Gerencie em tempo real os links de destino e a proteção de satisfação de cada placa da sua loja.
+        </p>
+    </div>
+    <a href="ativar" class="btn-token-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        <span>Ativar Nova Placa</span>
+    </a>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(_mensagemFeedback))
+{
+    <div class="alert-token @(_sucessoFeedback ? "alert-token-success" : "alert-token-danger")">
+        <span>@_mensagemFeedback</span>
+    </div>
+}
+
+<div class="card-panel">
+    @if (_carregando)
+    {
+        <div style="padding: var(--space-2xl); text-align: center;">
+            <LoadingSpinner Message="Carregando suas placas..." IsCentered="true" />
+        </div>
+    }
+    else if (_placas.Count == 0)
+    {
+        <EmptyState Title="Nenhuma placa ativada"
+                    Description="Você ainda não possui placas vinculadas à sua empresa. Aproxime o celular de sua primeira placa ou clique em 'Ativar Nova Placa'." />
+    }
+    else
+    {
+        <DataTable TItem="PlacaItemDto"
+                   Items="_placasPaginadas.ToList()"
+                   TotalItems="_placas.Count"
+                   CurrentPage="_paginaAtual"
+                   TotalPages="_totalPaginas"
+                   PageSize="_tamanhoPagina"
+                   ShowPagination="true"
+                   OnPageChanged="OnMudarPagina">
+            <HeaderTemplate>
+                <tr>
+                    <th>Slug / Identificador</th>
+                    <th>Status</th>
+                    <th>URL de Destino Atual</th>
+                    <th>Filtro de Satisfação</th>
+                    <th>Ativação</th>
+                    <th style="text-align: right;">Ações</th>
+                </tr>
+            </HeaderTemplate>
+            <RowTemplate Context="placa">
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: var(--space-xs);">
+                            <code style="font-weight: 600;">@placa.Slug.Substring(0, Math.Min(8, placa.Slug.Length))...</code>
+                            <button type="button" class="btn-token-icon" style="width: 24px; height: 24px;" title="Copiar Link Curto" @onclick="@(() => CopiarTextoAsync($"https://estrela.click/r/{placa.Slug}"))">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                    <td>
+                        <PlacaStatusBadge Status="placa.StatusPlaca" />
+                    </td>
+                    <td style="max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        @if (!string.IsNullOrWhiteSpace(placa.UrlDestino))
+                        {
+                            <a href="@placa.UrlDestino" target="_blank" rel="noopener noreferrer" title="@placa.UrlDestino">
+                                @placa.UrlDestino
+                            </a>
+                        }
+                        else
+                        {
+                            <span style="color: var(--color-text-tertiary);">Não configurado</span>
+                        }
+                    </td>
+                    <td>
+                        @if (placa.FiltroSatisfacaoAtivo)
+                        {
+                            <span class="badge" style="background-color: var(--color-success-bg); color: var(--color-success-text); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">
+                                Ativo (4-5★ Google / 1-3★ SAC)
+                            </span>
+                        }
+                        else
+                        {
+                            <span style="color: var(--color-text-secondary); font-size: 11px;">Direto</span>
+                        }
+                    </td>
+                    <td style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">
+                        @(placa.DataAtivacaoUtc?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "-")
+                    </td>
+                    <td style="text-align: right;">
+                        <div style="display: flex; gap: var(--space-xs); justify-content: flex-end;">
+                            <button type="button" class="btn-token-secondary" style="padding: 4px 8px; font-size: var(--font-size-xs);" @onclick="@(() => AbrirModalEdicao(placa))">
+                                Editar Link
+                            </button>
+                            <button type="button" class="btn-token-secondary" style="padding: 4px 8px; font-size: var(--font-size-xs);" @onclick="@(() => AbrirModalFiltro(placa))">
+                                Filtro 5★
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </RowTemplate>
+        </DataTable>
+    }
+</div>
+
+@if (_placaEmEdicao is not null)
+{
+    <ConfirmationModal IsOpen="true"
+                       Title="Editar URL de Destino"
+                       Message="Altere a página para onde os clientes serão redirecionados em tempo real ao aproximar o celular da placa."
+                       ConfirmButtonText="Salvar Alteração"
+                       CancelButtonText="Cancelar"
+                       OnConfirm="SalvarNovaUrlAsync"
+                       OnCancel="FecharModais">
+        <div style="margin-top: var(--space-md);">
+            <label style="display: block; font-size: var(--font-size-sm); font-weight: 600; margin-bottom: var(--space-2xs);">
+                Nova URL de Destino (HTTP / HTTPS)
+            </label>
+            <input type="url"
+                   required
+                   @bind="_novaUrlInput"
+                   placeholder="https://g.page/r/minha-loja/review"
+                   style="width: 100%; padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-md); background-color: var(--color-surface); color: var(--color-text-primary);" />
+        </div>
+    </ConfirmationModal>
+}
+
+@if (_placaEmFiltro is not null)
+{
+    <ConfirmationModal IsOpen="true"
+                       Title="Configurar Filtro de Satisfação"
+                       Message="Quando ativo, clientes que avaliarem de 1 a 3 estrelas serão encaminhados para seu SAC interno antes de publicarem no Google."
+                       ConfirmButtonText="Salvar Configuração"
+                       CancelButtonText="Cancelar"
+                       OnConfirm="SalvarFiltroSatisfacaoAsync"
+                       OnCancel="FecharModais">
+        <div style="margin-top: var(--space-md);">
+            <label style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-md); cursor: pointer;">
+                <input type="checkbox" @bind="_filtroAtivoInput" style="width: 18px; height: 18px;" />
+                <span style="font-weight: 600; font-size: var(--font-size-sm);">Habilitar Filtro Inteligente de Satisfação</span>
+            </label>
+
+            @if (_filtroAtivoInput)
+            {
+                <div>
+                    <label style="display: block; font-size: var(--font-size-sm); font-weight: 600; margin-bottom: var(--space-2xs);">
+                        Link do SAC / Ouvidoria Interna (Ex: WhatsApp da gerência)
+                    </label>
+                    <input type="url"
+                           required
+                           @bind="_urlSacInput"
+                           placeholder="https://wa.me/5511999999999?text=Gostaria+de+fazer+uma+reclamacao"
+                           style="width: 100%; padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-md); background-color: var(--color-surface); color: var(--color-text-primary);" />
+                </div>
+            }
+        </div>
+    </ConfirmationModal>
+}
+
+@code {
+    private List<PlacaItemDto> _placas = new();
+    private bool _carregando = true;
+    private int _paginaAtual = 1;
+    private const int _tamanhoPagina = 10;
+    private string? _mensagemFeedback;
+    private bool _sucessoFeedback;
+
+    private PlacaItemDto? _placaEmEdicao;
+    private string _novaUrlInput = string.Empty;
+
+    private PlacaItemDto? _placaEmFiltro;
+    private bool _filtroAtivoInput;
+    private string _urlSacInput = string.Empty;
+
+    private Guid _empresaIdAtual = Guid.Parse("00000000-0000-0000-0000-000000000001");
+
+    private int _totalPaginas => Math.Max(1, (int)Math.Ceiling((double)_placas.Count / _tamanhoPagina));
+
+    private IEnumerable<PlacaItemDto> _placasPaginadas =>
+        _placas.Skip((_paginaAtual - 1) * _tamanhoPagina).Take(_tamanhoPagina);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarPlacasAsync();
+    }
+
+    private async Task CarregarPlacasAsync()
+    {
+        _carregando = true;
+        try
+        {
+            var result = await ClientApi.ListarPlacasAsync(_empresaIdAtual);
+            if (result.IsSuccess && result.Value is not null)
+            {
+                _placas = result.Value.ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            _mensagemFeedback = $"Erro ao carregar placas: {ex.Message}";
+            _sucessoFeedback = false;
+        }
+        finally
+        {
+            _carregando = false;
+        }
+    }
+
+    private void OnMudarPagina(int novaPagina)
+    {
+        _paginaAtual = novaPagina;
+    }
+
+    private void AbrirModalEdicao(PlacaItemDto placa)
+    {
+        _placaEmEdicao = placa;
+        _novaUrlInput = placa.UrlDestino ?? string.Empty;
+    }
+
+    private void AbrirModalFiltro(PlacaItemDto placa)
+    {
+        _placaEmFiltro = placa;
+        _filtroAtivoInput = placa.FiltroSatisfacaoAtivo;
+        _urlSacInput = placa.UrlSacInterno ?? string.Empty;
+    }
+
+    private void FecharModais()
+    {
+        _placaEmEdicao = null;
+        _placaEmFiltro = null;
+    }
+
+    private async Task SalvarNovaUrlAsync()
+    {
+        if (_placaEmEdicao is null) return;
+
+        var request = new AtualizarUrlRequest(_placaEmEdicao.PlacaId, _novaUrlInput.Trim());
+        var result = await ClientApi.AtualizarUrlAsync(_empresaIdAtual, request);
+
+        if (result.IsSuccess)
+        {
+            _mensagemFeedback = "URL de destino atualizada com sucesso! O próximo toque já refletirá a mudança.";
+            _sucessoFeedback = true;
+            FecharModais();
+            await CarregarPlacasAsync();
+        }
+        else
+        {
+            _mensagemFeedback = result.Error.Description;
+            _sucessoFeedback = false;
+        }
+    }
+
+    private async Task SalvarFiltroSatisfacaoAsync()
+    {
+        if (_placaEmFiltro is null) return;
+
+        var request = new ConfigurarFiltroRequest(
+            _placaEmFiltro.PlacaId,
+            _filtroAtivoInput,
+            _filtroAtivoInput ? _urlSacInput.Trim() : null
+        );
+
+        var result = await ClientApi.ConfigurarFiltroAsync(_empresaIdAtual, request);
+
+        if (result.IsSuccess)
+        {
+            _mensagemFeedback = "Configuração do filtro de satisfação salva com sucesso!";
+            _sucessoFeedback = true;
+            FecharModais();
+            await CarregarPlacasAsync();
+        }
+        else
+        {
+            _mensagemFeedback = result.Error.Description;
+            _sucessoFeedback = false;
+        }
+    }
+
+    private async Task CopiarTextoAsync(string texto)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", texto);
+            _mensagemFeedback = "Link copiado para a área de transferência!";
+            _sucessoFeedback = true;
+        }
+        catch
+        {
+            _mensagemFeedback = $"Link para cópia: {texto}";
+            _sucessoFeedback = true;
+        }
+    }
+}

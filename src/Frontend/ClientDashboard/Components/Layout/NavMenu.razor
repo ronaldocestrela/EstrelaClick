@@ -1,0 +1,55 @@
+@inject NavigationManager Navigation
+
+<aside class="client-sidebar">
+    <div class="client-sidebar-header">
+        <div class="client-brand-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: var(--color-accent);">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+            <span>EstrelaClick</span>
+        </div>
+        <span class="client-brand-badge">Lojista</span>
+    </div>
+
+    <nav class="client-nav">
+        <NavLink class="client-nav-item" href="" Match="NavLinkMatch.All">
+            <svg class="client-nav-icon" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            <span>Visão Geral</span>
+        </NavLink>
+
+        <NavLink class="client-nav-item" href="placas">
+            <svg class="client-nav-icon" viewBox="0 0 24 24">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+            <span>Minhas Placas</span>
+        </NavLink>
+
+        <NavLink class="client-nav-item" href="analytics">
+            <svg class="client-nav-icon" viewBox="0 0 24 24">
+                <line x1="18" y1="20" x2="18" y2="10"/>
+                <line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            <span>Analytics & Toques</span>
+        </NavLink>
+
+        <NavLink class="client-nav-item" href="ativar">
+            <svg class="client-nav-icon" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="16"/>
+                <line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+            <span>Ativar Nova Placa</span>
+        </NavLink>
+    </nav>
+
+    <div class="client-sidebar-footer">
+        <span style="font-size: var(--font-size-xs); color: var(--color-text-tertiary);">EstrelaClick v1.0</span>
+    </div>
+</aside>

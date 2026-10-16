@@ -1,0 +1,108 @@
+@inject IAdminApiClient ApiClient
+
+<ConfirmationModal IsOpen="@IsOpen"
+                   Title="Cadastrar Novo Cliente Lojista"
+                   ConfirmButtonText="@(IsSubmitting ? "Cadastrando..." : "Salvar Cliente")"
+                   CancelButtonText="Cancelar"
+                   OnConfirm="HandleConfirmAsync"
+                   OnCancel="HandleCancelAsync">
+    <div style="display: flex; flex-direction: column; gap: var(--space-md); margin-top: var(--space-sm);">
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="alert-token alert-token-danger">
+                <span>@ErrorMessage</span>
+            </div>
+        }
+
+        <FormInputText Id="cliente-razao-social"
+                       Label="Razão Social / Nome Fantasia"
+                       Placeholder="Ex: Barbearia Estrela LTDA"
+                       Value="@RazaoSocial"
+                       ValueChanged="@(v => RazaoSocial = v)" />
+
+        <FormInputText Id="cliente-email"
+                       Label="E-mail de Contato"
+                       Type="email"
+                       Placeholder="Ex: contato@barbeariaestrela.com.br"
+                       Value="@Email"
+                       ValueChanged="@(v => Email = v)" />
+
+        <FormInputText Id="cliente-telefone"
+                       Label="Telefone / WhatsApp"
+                       Placeholder="Ex: (11) 98765-4321"
+                       Value="@Telefone"
+                       ValueChanged="@(v => Telefone = v)" />
+    </div>
+</ConfirmationModal>
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<EmpresaDto> OnClienteCadastrado { get; set; }
+
+    public string RazaoSocial { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Telefone { get; set; } = string.Empty;
+    public string? ErrorMessage { get; set; }
+    public bool IsSubmitting { get; set; }
+
+    private async Task HandleConfirmAsync()
+    {
+        if (IsSubmitting) return;
+
+        if (string.IsNullOrWhiteSpace(RazaoSocial))
+        {
+            ErrorMessage = "Razão social é obrigatória.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Email) || !Email.Contains("@"))
+        {
+            ErrorMessage = "Informe um e-mail válido.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Telefone))
+        {
+            ErrorMessage = "Telefone é obrigatório.";
+            return;
+        }
+
+        IsSubmitting = true;
+        ErrorMessage = null;
+
+        var request = new CriarEmpresaRequest(RazaoSocial.Trim(), Email.Trim(), Telefone.Trim());
+        var result = await ApiClient.CadastrarEmpresaAsync(request);
+        IsSubmitting = false;
+
+        if (result.IsSuccess && result.Value is not null)
+        {
+            await OnClienteCadastrado.InvokeAsync(result.Value);
+            RazaoSocial = string.Empty;
+            Email = string.Empty;
+            Telefone = string.Empty;
+            await FecharAsync();
+        }
+        else
+        {
+            ErrorMessage = result.Error.Description;
+        }
+    }
+
+    private async Task HandleCancelAsync()
+    {
+        ErrorMessage = null;
+        await FecharAsync();
+    }
+
+    private async Task FecharAsync()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+    }
+}

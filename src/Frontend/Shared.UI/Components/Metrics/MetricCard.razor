@@ -1,0 +1,152 @@
+@namespace EstrelaClick.Frontend.Shared.UI.Components.Metrics
+
+<div class="metric-card">
+    <div class="metric-header">
+        <h4 class="metric-title">@Title</h4>
+        @if (Icon != null)
+        {
+            <div class="metric-icon" aria-hidden="true">
+                @Icon
+            </div>
+        }
+    </div>
+
+    <div class="metric-body">
+        <div class="metric-value">@Value</div>
+        @if (!string.IsNullOrWhiteSpace(TrendText))
+        {
+            <span class="metric-trend @(IsPositiveTrend ? "trend-positive" : "trend-negative")">
+                <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" aria-hidden="true">
+                    @if (IsPositiveTrend)
+                    {
+                        <path fill-rule="evenodd" d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5z"/>
+                    }
+                    else
+                    {
+                        <path fill-rule="evenodd" d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4z"/>
+                    }
+                </svg>
+                <span>@TrendText</span>
+            </span>
+        }
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Subtitle))
+    {
+        <div class="metric-footer">
+            <span class="metric-subtitle">@Subtitle</span>
+        </div>
+    }
+</div>
+
+<style>
+    .metric-card {
+        background-color: var(--color-surface-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-card);
+        padding: var(--space-lg);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-xs);
+        transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+        box-sizing: border-box;
+    }
+
+    .metric-card:hover {
+        border-color: var(--color-border-focus);
+    }
+
+    .metric-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-sm);
+    }
+
+    .metric-title {
+        margin: 0;
+        font-family: var(--font-family-base);
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-medium);
+        color: var(--color-text-secondary);
+    }
+
+    .metric-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-md);
+        background-color: var(--color-surface-hover);
+        color: var(--color-accent);
+        flex-shrink: 0;
+    }
+
+    .metric-body {
+        display: flex;
+        align-items: baseline;
+        gap: var(--space-sm);
+        flex-wrap: wrap;
+    }
+
+    .metric-value {
+        font-family: var(--font-family-base);
+        font-size: var(--font-size-2xl);
+        font-weight: var(--font-weight-bold);
+        color: var(--color-text-primary);
+        line-height: var(--line-height-tight);
+    }
+
+    .metric-trend {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2xs);
+        font-family: var(--font-family-base);
+        font-size: var(--font-size-xs);
+        font-weight: var(--font-weight-medium);
+        padding: 2px var(--space-xs);
+        border-radius: var(--radius-full);
+    }
+
+    .trend-positive {
+        background-color: var(--color-success-bg);
+        color: var(--color-success-text);
+    }
+
+    .trend-negative {
+        background-color: var(--color-danger-bg);
+        color: var(--color-danger-text);
+    }
+
+    .metric-footer {
+        margin-top: var(--space-2xs);
+    }
+
+    .metric-subtitle {
+        font-family: var(--font-family-base);
+        font-size: var(--font-size-xs);
+        color: var(--color-text-muted);
+    }
+</style>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Value { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Subtitle { get; set; }
+
+    [Parameter]
+    public string? TrendText { get; set; }
+
+    [Parameter]
+    public bool IsPositiveTrend { get; set; } = true;
+
+    [Parameter]
+    public RenderFragment? Icon { get; set; }
+}

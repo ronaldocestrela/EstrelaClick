@@ -1,0 +1,123 @@
+@namespace EstrelaClick.Frontend.Shared.UI.Components.Badges
+@using EstrelaClick.Shared.SharedKernel.Enums
+
+<span class="status-badge @GetStatusClass()" role="status" aria-label="@GetStatusText()">
+    @if (Status == StatusPlaca.EmGravacao)
+    {
+        <span class="pulse-dot" aria-hidden="true"></span>
+    }
+    else
+    {
+        <svg class="status-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            @switch (Status)
+            {
+                case StatusPlaca.Criada:
+                    <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="2"/>
+                    break;
+                case StatusPlaca.Gravada:
+                    <path fill-rule="evenodd" d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/>
+                    break;
+                case StatusPlaca.Vinculada:
+                    <path d="M1.5 8a6.5 6.5 0 1 1 13 0 6.5 6.5 0 0 1-13 0Zm7-3.25a.75.75 0 0 0-1.5 0v3.5c0 .414.336.75.75.75h2.5a.75.75 0 0 0 0-1.5H8.5V4.75Z"/>
+                    break;
+            }
+        </svg>
+    }
+    <span class="status-text">@GetStatusText()</span>
+</span>
+
+<style>
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-xs);
+        padding: var(--space-2xs) var(--space-sm);
+        border-radius: var(--radius-full);
+        font-family: var(--font-family-base);
+        font-size: var(--font-size-xs);
+        font-weight: var(--font-weight-medium);
+        line-height: var(--line-height-tight);
+        border: 1px solid transparent;
+        transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+        white-space: nowrap;
+    }
+
+    .status-badge .status-icon {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+    }
+
+    .status-badge.badge-neutral {
+        background-color: var(--color-neutral-bg);
+        color: var(--color-neutral-text);
+        border-color: var(--color-neutral-border);
+    }
+
+    .status-badge.badge-info {
+        background-color: var(--color-info-bg);
+        color: var(--color-info-text);
+        border-color: var(--color-info-border);
+    }
+
+    .status-badge.badge-success {
+        background-color: var(--color-success-bg);
+        color: var(--color-success-text);
+        border-color: var(--color-success-border);
+    }
+
+    .status-badge.badge-primary {
+        background-color: var(--color-accent-subtle);
+        color: var(--color-accent-hover);
+        border-color: var(--color-border-focus);
+    }
+
+    .pulse-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: var(--radius-full);
+        background-color: var(--color-info);
+        display: inline-block;
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+        animation: status-pulse 1.8s infinite cubic-bezier(0.66, 0, 0, 1);
+        flex-shrink: 0;
+    }
+
+    @@keyframes status-pulse {
+        0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+        }
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 6px rgba(99, 102, 241, 0);
+        }
+        100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+        }
+    }
+</style>
+
+@code {
+    [Parameter]
+    public StatusPlaca Status { get; set; } = StatusPlaca.Criada;
+
+    private string GetStatusClass() => Status switch
+    {
+        StatusPlaca.Criada => "badge-neutral",
+        StatusPlaca.EmGravacao => "badge-info",
+        StatusPlaca.Gravada => "badge-success",
+        StatusPlaca.Vinculada => "badge-primary",
+        _ => "badge-neutral"
+    };
+
+    private string GetStatusText() => Status switch
+    {
+        StatusPlaca.Criada => "Criada",
+        StatusPlaca.EmGravacao => "Em Gravação",
+        StatusPlaca.Gravada => "Gravada",
+        StatusPlaca.Vinculada => "Vinculada",
+        _ => Status.ToString()
+    };
+}

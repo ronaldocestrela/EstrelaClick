@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:EstrelaClick.Shared.SharedKernel.Mobile.ViewModels;assembly=EstrelaClick.Shared.SharedKernel"
+             x:Class="EstrelaClick.Mobile.FactoryMobileApp.Views.BancadaPage"
+             BackgroundColor="{StaticResource EstrelaBackground}"
+             NavigationPage.HasNavigationBar="False">
+
+    <Grid RowDefinitions="Auto, *">
+
+        <!-- Barra Superior (Header do Operador) -->
+        <Border Grid.Row="0"
+                BackgroundColor="{StaticResource EstrelaSurface}"
+                Stroke="{StaticResource EstrelaBorder}"
+                StrokeThickness="1"
+                Padding="20,14"
+                StrokeShape="RoundRectangle 0,0,16,16">
+            <Grid ColumnDefinitions="*, Auto">
+                <VerticalStackLayout Grid.Column="0" Spacing="2">
+                    <Label Text="EstrelaClick • Bancada Fabril"
+                           FontSize="12"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource EstrelaAccent}" />
+                    <Label Text="{Binding OperadorNome, StringFormat='Operador: {0}'}"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource EstrelaTextPrimary}" />
+                </VerticalStackLayout>
+
+                <Button Grid.Column="1"
+                        Text="Sair"
+                        Clicked="OnLogoutClicked"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource EstrelaError}"
+                        BorderColor="{StaticResource EstrelaError}"
+                        BorderWidth="1"
+                        FontSize="13"
+                        HeightRequest="36"
+                        Padding="16,0"
+                        CornerRadius="6"
+                        VerticalOptions="Center" />
+            </Grid>
+        </Border>
+
+        <!-- Conteúdo Principal -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="20" Padding="20">
+
+                <!-- Filtro de Lote -->
+                <Border BackgroundColor="{StaticResource EstrelaSurface}"
+                        Stroke="{StaticResource EstrelaBorder}"
+                        StrokeThickness="1"
+                        Padding="16"
+                        StrokeShape="RoundRectangle 12">
+                    <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
+                        <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Label Text="Lote em Produção"
+                                   FontSize="13"
+                                   TextColor="{StaticResource EstrelaTextSecondary}" />
+                            <Border BackgroundColor="{StaticResource EstrelaBackground}"
+                                    Stroke="{StaticResource EstrelaBorder}"
+                                    StrokeThickness="1"
+                                    Padding="10,2"
+                                    StrokeShape="RoundRectangle 6">
+                                <Entry Text="{Binding NumeroLote}"
+                                       Placeholder="Ex: LOTE-2026-01 (ou vazio para fila global)"
+                                       TextColor="{StaticResource EstrelaTextPrimary}"
+                                       PlaceholderColor="{StaticResource EstrelaTextSecondary}"
+                                       FontSize="14" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <Button Grid.Column="1"
+                                Text="Atualizar"
+                                Clicked="OnAtualizarLoteClicked"
+                                BackgroundColor="{StaticResource EstrelaAccent}"
+                                TextColor="{StaticResource White}"
+                                FontSize="13"
+                                HeightRequest="44"
+                                VerticalOptions="End"
+                                CornerRadius="6" />
+                    </Grid>
+                </Border>
+
+                <!-- Painel de Métricas de Produção -->
+                <Grid ColumnDefinitions="*, *, *" ColumnSpacing="12">
+                    
+                    <!-- Card 1: Total do Lote -->
+                    <Border Grid.Column="0"
+                            BackgroundColor="{StaticResource EstrelaSurface}"
+                            Stroke="{StaticResource EstrelaBorder}"
+                            StrokeThickness="1"
+                            Padding="12,16"
+                            StrokeShape="RoundRectangle 12">
+                        <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
+                            <Label Text="Total Lote"
+                                   FontSize="12"
+                                   TextColor="{StaticResource EstrelaTextSecondary}"
+                                   HorizontalTextAlignment="Center" />
+                            <Label Text="{Binding TotalLote}"
+                                   FontSize="24"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource EstrelaTextPrimary}"
+                                   HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Card 2: Gravadas na Sessão -->
+                    <Border Grid.Column="1"
+                            BackgroundColor="{StaticResource EstrelaSurface}"
+                            Stroke="{StaticResource EstrelaSuccess}"
+                            StrokeThickness="1.5"
+                            Padding="12,16"
+                            StrokeShape="RoundRectangle 12">
+                        <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
+                            <Label Text="Na Sessão"
+                                   FontSize="12"
+                                   TextColor="{StaticResource EstrelaSuccess}"
+                                   FontAttributes="Bold"
+                                   HorizontalTextAlignment="Center" />
+                            <Label Text="{Binding GravadasNaSessao}"
+                                   FontSize="24"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource EstrelaSuccess}"
+                                   HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Card 3: Pendentes no Lote -->
+                    <Border Grid.Column="2"
+                            BackgroundColor="{StaticResource EstrelaSurface}"
+                            Stroke="{StaticResource EstrelaBorder}"
+                            StrokeThickness="1"
+                            Padding="12,16"
+                            StrokeShape="RoundRectangle 12">
+                        <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
+                            <Label Text="Pendentes"
+                                   FontSize="12"
+                                   TextColor="{StaticResource EstrelaWarning}"
+                                   HorizontalTextAlignment="Center" />
+                            <Label Text="{Binding PendentesLote}"
+                                   FontSize="24"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource EstrelaWarning}"
+                                   HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <!-- Alternância: Modo Gravação Contínua -->
+                <Border BackgroundColor="{StaticResource EstrelaSurface}"
+                        Stroke="{StaticResource EstrelaBorder}"
+                        StrokeThickness="1"
+                        Padding="16"
+                        StrokeShape="RoundRectangle 12">
+                    <Grid ColumnDefinitions="*, Auto" VerticalOptions="Center">
+                        <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Label Text="Modo Gravação Contínua"
+                                   FontSize="16"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource EstrelaTextPrimary}" />
+                            <Label Text="Avança na fila automaticamente após cada confirmação de chip NFC"
+                                   FontSize="12"
+                                   TextColor="{StaticResource EstrelaTextSecondary}" />
+                        </VerticalStackLayout>
+
+                        <Switch Grid.Column="1"
+                                IsToggled="{Binding ModoGravacaoContinua}"
+                                OnColor="{StaticResource EstrelaAccent}"
+                                ThumbColor="{StaticResource White}"
+                                VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+
+                <!-- Detalhes da Placa Ativa -->
+                <Border BackgroundColor="{StaticResource EstrelaSurface}"
+                        Stroke="{StaticResource EstrelaBorder}"
+                        StrokeThickness="1"
+                        Padding="20"
+                        StrokeShape="RoundRectangle 14">
+                    <VerticalStackLayout Spacing="14">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <Label Grid.Column="0"
+                                   Text="Placa Ativa em Reserva"
+                                   FontSize="16"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource EstrelaTextPrimary}" />
+                            <Border Grid.Column="1"
+                                    BackgroundColor="{StaticResource EstrelaBackground}"
+                                    Stroke="{StaticResource EstrelaAccent}"
+                                    StrokeThickness="1"
+                                    Padding="8,2"
+                                    StrokeShape="RoundRectangle 4"
+                                    IsVisible="{Binding TemPlacaAtiva}">
+                                <Label Text="TTL 90s"
+                                       FontSize="11"
+                                       TextColor="{StaticResource EstrelaAccent}" />
+                            </Border>
+                        </Grid>
+
+                        <!-- Informações da Placa quando Carregada -->
+                        <VerticalStackLayout Spacing="10" IsVisible="{Binding TemPlacaAtiva}">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="Identificador Único (Slug GUID):"
+                                       FontSize="12"
+                                       TextColor="{StaticResource EstrelaTextSecondary}" />
+                                <Label Text="{Binding PlacaAtivaSlug}"
+                                       FontSize="15"
+                                       FontFamily="Courier"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource EstrelaTextPrimary}" />
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="URL NDEF de Gravação:"
+                                       FontSize="12"
+                                       TextColor="{StaticResource EstrelaTextSecondary}" />
+                                <Label Text="{Binding PlacaAtivaUrl}"
+                                       FontSize="14"
+                                       TextColor="{StaticResource EstrelaAccent}"
+                                       LineBreakMode="CharacterWrap" />
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+
+                        <!-- Estado Sem Placa Ativa -->
+                        <VerticalStackLayout Spacing="8" IsVisible="{Binding TemPlacaAtiva, Converter={StaticResource InvertedBoolConverter}}">
+                            <Label Text="Nenhuma placa alocada no momento."
+                                   FontSize="14"
+                                   TextColor="{StaticResource EstrelaTextSecondary}"
+                                   HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+
+                        <!-- Botão Manual Buscar Próxima -->
+                        <Button Text="Buscar Próxima Placa na Fila"
+                                Clicked="OnBuscarProximaClicked"
+                                BackgroundColor="{StaticResource EstrelaAccent}"
+                                TextColor="{StaticResource White}"
+                                FontAttributes="Bold"
+                                FontSize="15"
+                                HeightRequest="48"
+                                CornerRadius="8"
+                                IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Barra de Status e Feedback de Hardware NFC -->
+                <Border BackgroundColor="{StaticResource EstrelaSurface}"
+                        Stroke="{StaticResource EstrelaBorder}"
+                        StrokeThickness="1"
+                        Padding="16"
+                        StrokeShape="RoundRectangle 12">
+                    <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
+                        <Label Text="Status do Hardware / Sensor NFC"
+                               FontSize="12"
+                               TextColor="{StaticResource EstrelaTextSecondary}"
+                               HorizontalTextAlignment="Center" />
+                        <Label Text="{Binding StatusMensagem}"
+                               FontSize="15"
+                               FontAttributes="Bold"
+                               TextColor="{Binding StatusCorHex}"
+                               HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+
+</ContentPage>

@@ -1,0 +1,136 @@
+@page "/clientes"
+@inject IAdminApiClient ApiClient
+
+<PageTitle>Clientes Lojistas | EstrelaClick</PageTitle>
+
+<div style="display: flex; flex-direction: column; gap: var(--space-xl);">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-md);">
+        <div>
+            <h2 style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-text-primary);">Gestão de Clientes Lojistas</h2>
+            <p style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">Cadastre novos parceiros e acompanhe o volume de placas vinculadas por estabelecimento.</p>
+        </div>
+
+        <button type="button" class="btn-token-primary" @onclick="() => ExibirModalNovoCliente = true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>Novo Cliente</span>
+        </button>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(MensagemFeedback))
+    {
+        <div class="alert-token alert-token-success">
+            <span>@MensagemFeedback</span>
+        </div>
+    }
+
+    <div class="card-panel" style="padding: 0; overflow: hidden;">
+        <DataTable TItem="EmpresaDto"
+                   Items="@ClientesExibidos"
+                   IsLoading="@IsCarregando"
+                   ShowSearch="true"
+                   SearchPlaceholder="Buscar por razão social ou e-mail..."
+                   OnSearch="HandleSearch"
+                   EmptyMessage="Nenhum cliente lojista cadastrado.">
+            <HeaderTemplate>
+                <tr>
+                    <th>RAZÃO SOCIAL</th>
+                    <th>E-MAIL</th>
+                    <th>TELEFONE</th>
+                    <th>PLACAS ATIVAS</th>
+                    <th>STATUS</th>
+                    <th>DATA CADASTRO</th>
+                </tr>
+            </HeaderTemplate>
+            <RowTemplate Context="empresa">
+                <tr>
+                    <td style="font-weight: var(--font-weight-semibold); color: var(--color-text-primary);">
+                        @empresa.RazaoSocial
+                    </td>
+                    <td style="color: var(--color-text-secondary);">@empresa.Email</td>
+                    <td style="color: var(--color-text-secondary);">@empresa.Telefone</td>
+                    <td style="font-weight: var(--font-weight-bold); color: var(--color-accent);">
+                        @empresa.TotalPlacas
+                    </td>
+                    <td>
+                        <span style="display: inline-block; padding: var(--space-2xs) var(--space-xs); border-radius: var(--radius-sm); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); background-color: var(--color-success-bg); color: var(--color-success-text); border: 1px solid var(--color-success-border);">
+                            Ativo
+                        </span>
+                    </td>
+                    <td style="color: var(--color-text-muted);">
+                        @empresa.DataCadastroUtc.ToLocalTime().ToString("dd/MM/yyyy")
+                    </td>
+                </tr>
+            </RowTemplate>
+        </DataTable>
+
+        @if (ClientesFiltrados.Count > 0)
+        {
+            <PaginationControl CurrentPage="@PaginaAtual"
+                               TotalItems="@ClientesFiltrados.Count"
+                               PageSize="@ItensPorPagina"
+                               OnPageChanged="HandlePageChanged" />
+        }
+    </div>
+</div>
+
+<EstrelaClick.Frontend.AdminDashboard.Components.Modais.CadastrarClienteModal
+    @bind-IsOpen="ExibirModalNovoCliente"
+    OnClienteCadastrado="HandleClienteCadastradoAsync" />
+
+@code {
+    public bool IsCarregando { get; set; } = true;
+    public bool ExibirModalNovoCliente { get; set; }
+    public string? MensagemFeedback { get; set; }
+    public string TermoBusca { get; set; } = string.Empty;
+    public int PaginaAtual { get; set; } = 1;
+    public int ItensPorPagina { get; set; } = 10;
+
+    public List<EmpresaDto> TodasEmpresas { get; set; } = new();
+
+    public List<EmpresaDto> ClientesFiltrados => string.IsNullOrWhiteSpace(TermoBusca)
+        ? TodasEmpresas
+        : TodasEmpresas.Where(e =>
+            e.RazaoSocial.Contains(TermoBusca, StringComparison.OrdinalIgnoreCase) ||
+            e.Email.Contains(TermoBusca, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    public IReadOnlyList<EmpresaDto> ClientesExibidos => ClientesFiltrados
+        .Skip((PaginaAtual - 1) * ItensPorPagina)
+        .Take(ItensPorPagina)
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarClientesAsync();
+    }
+
+    private async Task CarregarClientesAsync()
+    {
+        IsCarregando = true;
+        var result = await ApiClient.ListarEmpresasAsync();
+        if (result.IsSuccess && result.Value is not null)
+        {
+            TodasEmpresas = result.Value.ToList();
+        }
+        IsCarregando = false;
+    }
+
+    private void HandleSearch(string termo)
+    {
+        TermoBusca = termo;
+        PaginaAtual = 1;
+    }
+
+    private void HandlePageChanged(int novaPagina)
+    {
+        PaginaAtual = novaPagina;
+    }
+
+    private async Task HandleClienteCadastradoAsync(EmpresaDto novoCliente)
+    {
+        MensagemFeedback = $"Cliente '{novoCliente.RazaoSocial}' cadastrado com sucesso!";
+        await CarregarClientesAsync();
+    }
+}

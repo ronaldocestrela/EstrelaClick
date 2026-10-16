@@ -1,0 +1,49 @@
+<Solution>
+  <Folder Name="/Itens de Solução/">
+    <File Path="AGENTS.md" />
+    <File Path="inidial_roadmap.md" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Backend/" />
+  <Folder Name="/src/Backend/Api/">
+    <Project Path="src/Backend/Api/EstrelaClick.Backend.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Backend/Application/">
+    <Project Path="src/Backend/Application/EstrelaClick.Backend.Application.csproj" />
+  </Folder>
+  <Folder Name="/src/Backend/Domain/">
+    <Project Path="src/Backend/Domain/EstrelaClick.Backend.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/Backend/Infrastructure/">
+    <Project Path="src/Backend/Infrastructure/EstrelaClick.Backend.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Frontend/" />
+  <Folder Name="/src/Frontend/AdminDashboard/">
+    <Project Path="src/Frontend/AdminDashboard/EstrelaClick.Frontend.AdminDashboard.csproj" />
+  </Folder>
+  <Folder Name="/src/Frontend/ClientDashboard/">
+    <Project Path="src/Frontend/ClientDashboard/EstrelaClick.Frontend.ClientDashboard.csproj" />
+  </Folder>
+  <Folder Name="/src/Frontend/Shared.UI/">
+    <Project Path="src/Frontend/Shared.UI/EstrelaClick.Frontend.Shared.UI.csproj" />
+  </Folder>
+  <Folder Name="/src/Mobile/" />
+  <Folder Name="/src/Mobile/FactoryMobileApp/">
+    <Project Path="src/Mobile/FactoryMobileApp/EstrelaClick.Mobile.FactoryMobileApp.csproj" />
+  </Folder>
+  <Folder Name="/src/Shared/" />
+  <Folder Name="/src/Shared/SharedKernel/">
+    <Project Path="src/Shared/SharedKernel/EstrelaClick.Shared.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/ArchitectureTests/">
+    <Project Path="tests/ArchitectureTests/EstrelaClick.Tests.ArchitectureTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/IntegrationTests/">
+    <Project Path="tests/IntegrationTests/EstrelaClick.Tests.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/UnitTests/">
+    <Project Path="tests/UnitTests/EstrelaClick.Tests.UnitTests.csproj" />
+  </Folder>
+</Solution>

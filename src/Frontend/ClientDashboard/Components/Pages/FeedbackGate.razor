@@ -1,0 +1,131 @@
+@page "/feedback/{Slug}"
+@rendermode InteractiveServer
+@inject IClientApiClient ClientApi
+@inject NavigationManager Navigation
+
+<PageTitle>Avalie sua Experiência</PageTitle>
+
+<div style="min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: var(--space-md);">
+    <div class="card-panel" style="max-width: 480px; width: 100%; text-align: center; padding: var(--space-2xl); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg);">
+        @if (_carregando)
+        {
+            <LoadingSpinner Message="Carregando..." IsCentered="true" />
+        }
+        else if (_placa is null || string.IsNullOrWhiteSpace(_placa.UrlDestinoAtual))
+        {
+            <div style="color: var(--color-danger-text);">
+                <h3>Placa não encontrada</h3>
+                <p style="font-size: var(--font-size-sm); color: var(--color-text-secondary); margin-top: var(--space-xs);">
+                    Não foi possível identificar a loja correspondente a este link.
+                </p>
+            </div>
+        }
+        else if (_notaSelecionada == 0)
+        {
+            <div style="margin-bottom: var(--space-lg);">
+                <div style="font-size: 40px; margin-bottom: var(--space-xs);">⭐</div>
+                <h2 style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin-bottom: var(--space-2xs);">
+                    Como foi sua experiência conosco?
+                </h2>
+                <p style="color: var(--color-text-secondary); font-size: var(--font-size-sm);">
+                    Sua opinião é fundamental para aprimorarmos continuamente nosso atendimento.
+                </p>
+            </div>
+
+            <div style="display: flex; justify-content: center; gap: var(--space-sm); margin: var(--space-xl) 0;">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    var nota = i;
+                    <button type="button"
+                            @onclick="@(() => Avaliar(nota))"
+                            style="background: none; border: none; font-size: 36px; cursor: pointer; transition: transform 0.15s ease;"
+                            onmouseover="this.style.transform='scale(1.2)'"
+                            onmouseout="this.style.transform='scale(1)'"
+                            title="@($"{nota} estrelas")">
+                        ⭐
+                    </button>
+                }
+            </div>
+
+            <span style="font-size: var(--font-size-xs); color: var(--color-text-tertiary);">
+                Toque nas estrelas para avaliar (1 a 5)
+            </span>
+        }
+        else if (_notaSelecionada >= 4)
+        {
+            <div>
+                <div style="font-size: 48px; margin-bottom: var(--space-sm);">🎉</div>
+                <h3 style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text-primary); margin-bottom: var(--space-xs);">
+                    Ficamos muito felizes!
+                </h3>
+                <p style="color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-bottom: var(--space-xl);">
+                    Você poderia compartilhar essa avaliação no Google? Leva menos de 30 segundos e nos ajuda muito!
+                </p>
+                <a href="@_placa.UrlDestinoAtual" class="btn-token-primary" style="padding: var(--space-md) var(--space-xl); font-size: var(--font-size-md); width: 100%;">
+                    Avaliar no Google Agora
+                </a>
+            </div>
+        }
+        else
+        {
+            <div>
+                <div style="font-size: 48px; margin-bottom: var(--space-sm);">💬</div>
+                <h3 style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text-primary); margin-bottom: var(--space-xs);">
+                    Sentimos muito!
+                </h3>
+                <p style="color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-bottom: var(--space-xl);">
+                    Queremos entender o que aconteceu e resolver seu problema diretamente com a gerência.
+                </p>
+
+                @if (!string.IsNullOrWhiteSpace(_placa.UrlSacInterno))
+                {
+                    <a href="@_placa.UrlSacInterno" class="btn-token-primary" style="padding: var(--space-md) var(--space-xl); font-size: var(--font-size-md); width: 100%; margin-bottom: var(--space-sm);">
+                        Falar Direto no WhatsApp da Gerência
+                    </a>
+                }
+                else
+                {
+                    <a href="@_placa.UrlDestinoAtual" class="btn-token-secondary" style="padding: var(--space-md) var(--space-xl); font-size: var(--font-size-md); width: 100%;">
+                        Prosseguir
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+
+    private VerificarOnboardingDto? _placa;
+    private bool _carregando = true;
+    private int _notaSelecionada = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Slug))
+        {
+            _carregando = false;
+            return;
+        }
+
+        try
+        {
+            var result = await ClientApi.VerificarOnboardingAsync(Slug);
+            if (result.IsSuccess)
+            {
+                _placa = result.Value;
+            }
+        }
+        finally
+        {
+            _carregando = false;
+        }
+    }
+
+    private void Avaliar(int nota)
+    {
+        _notaSelecionada = nota;
+    }
+}

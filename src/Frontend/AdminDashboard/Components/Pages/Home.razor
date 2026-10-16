@@ -1,0 +1,152 @@
+@page "/"
+@inject IAdminApiClient ApiClient
+
+<PageTitle>Visão Geral da Fábrica | EstrelaClick</PageTitle>
+
+<div style="display: flex; flex-direction: column; gap: var(--space-xl);">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-md);">
+        <div>
+            <h2 style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-text-primary);">Painel Fabril & Estoque</h2>
+            <p style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">Acompanhamento em tempo real da produção, estoque e ativações.</p>
+        </div>
+
+        <button type="button" class="btn-token-primary" @onclick="() => ExibirModalNovoLote = true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>Gerar Novo Lote</span>
+        </button>
+    </div>
+
+    @if (IsCarregando)
+    {
+        <div style="padding: var(--space-2xl); display: flex; justify-content: center;">
+            <LoadingSpinner Text="Carregando estatísticas da fábrica..." />
+        </div>
+    }
+    else
+    {
+        <div class="metrics-grid">
+            <MetricCard Title="Total Criadas"
+                        Value="@Metricas.TotalPlacas.ToString("N0")"
+                        Subtitle="Aguardando gravação ou em lote" />
+
+            <MetricCard Title="Gravadas em Estoque"
+                        Value="@Metricas.TotalGravadas.ToString("N0")"
+                        Subtitle="Chips NFC gravados prontos para envio"
+                        TrendText="@($"{CalcularPercentual(Metricas.TotalGravadas, Metricas.TotalPlacas):0.0}%")"
+                        IsPositiveTrend="true" />
+
+            <MetricCard Title="Ativadas em Clientes"
+                        Value="@Metricas.TotalVinculadas.ToString("N0")"
+                        Subtitle="Placas vinculadas e ativas em lojistas"
+                        TrendText="@($"{CalcularPercentual(Metricas.TotalVinculadas, Metricas.TotalPlacas):0.0}%")"
+                        IsPositiveTrend="true" />
+
+            <MetricCard Title="Lotes Registrados"
+                        Value="@Metricas.TotalLotes.ToString("N0")"
+                        Subtitle="Remessas criadas na fábrica" />
+        </div>
+
+        <div class="card-panel">
+            <div class="card-panel-header">
+                <h3 class="card-panel-title">Últimos Lotes Criados</h3>
+                <a href="lotes" class="btn-token-secondary" style="font-size: var(--font-size-xs);">Ver Todos os Lotes</a>
+            </div>
+
+            @if (!LotesRecentes.Any())
+            {
+                <EmptyState Title="Nenhum lote criado"
+                            Message="Clique em 'Gerar Novo Lote' para iniciar a primeira remessa de placas." />
+            }
+            else
+            {
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: var(--font-size-sm); text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--color-border); color: var(--color-text-secondary);">
+                                <th style="padding: var(--space-sm);">LOTE</th>
+                                <th style="padding: var(--space-sm);">TOTAL</th>
+                                <th style="padding: var(--space-sm);">GRAVADAS</th>
+                                <th style="padding: var(--space-sm);">VINCULADAS</th>
+                                <th style="padding: var(--space-sm);">DATA DE CRIAÇÃO</th>
+                                <th style="padding: var(--space-sm); text-align: right;">AÇÃO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var lote in LotesRecentes.Take(5))
+                            {
+                                <tr style="border-bottom: 1px solid var(--color-border-subtle);">
+                                    <td style="padding: var(--space-md) var(--space-sm); font-weight: var(--font-weight-semibold); color: var(--color-text-primary);">
+                                        @lote.NumeroLote
+                                    </td>
+                                    <td style="padding: var(--space-md) var(--space-sm);">@lote.TotalPlacas</td>
+                                    <td style="padding: var(--space-md) var(--space-sm); color: var(--color-success-text);">@lote.QuantidadeGravada</td>
+                                    <td style="padding: var(--space-md) var(--space-sm); color: var(--color-accent);">@lote.QuantidadeVinculada</td>
+                                    <td style="padding: var(--space-md) var(--space-sm); color: var(--color-text-muted);">
+                                        @lote.DataCriacaoUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                    </td>
+                                    <td style="padding: var(--space-md) var(--space-sm); text-align: right;">
+                                        <a href="@ApiClient.ObterUrlDownloadZipLote(lote.NumeroLote)"
+                                           class="btn-token-secondary"
+                                           target="_blank"
+                                           style="padding: var(--space-2xs) var(--space-xs); font-size: var(--font-size-xs);"
+                                           title="Baixar pacote .zip para gráfica e laser">
+                                            Baixar ZIP
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<EstrelaClick.Frontend.AdminDashboard.Components.Modais.GerarLoteModal
+    @bind-IsOpen="ExibirModalNovoLote"
+    OnLoteCriado="HandleLoteCriadoAsync" />
+
+@code {
+    public bool IsCarregando { get; set; } = true;
+    public bool ExibirModalNovoLote { get; set; }
+    public MetricasFabricaDto Metricas { get; set; } = new(0, 0, 0, 0, 0, 0);
+    public List<LoteItemDto> LotesRecentes { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarDadosAsync();
+    }
+
+    private async Task CarregarDadosAsync()
+    {
+        IsCarregando = true;
+        var metricasResult = await ApiClient.ObterMetricasFabricaAsync();
+        if (metricasResult.IsSuccess && metricasResult.Value is not null)
+        {
+            Metricas = metricasResult.Value;
+        }
+
+        var lotesResult = await ApiClient.ListarLotesAsync();
+        if (lotesResult.IsSuccess && lotesResult.Value is not null)
+        {
+            LotesRecentes = lotesResult.Value.ToList();
+        }
+
+        IsCarregando = false;
+    }
+
+    private async Task HandleLoteCriadoAsync(LoteCriadoDto lote)
+    {
+        await CarregarDadosAsync();
+    }
+
+    private double CalcularPercentual(int parte, int total)
+    {
+        if (total == 0) return 0;
+        return (double)parte / total * 100.0;
+    }
+}

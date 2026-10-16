@@ -1,0 +1,78 @@
+@namespace EstrelaClick.Frontend.Shared.UI.Components.Feedback
+
+<div class="spinner-container @(IsCentered ? "centered" : "")" role="status" aria-live="polite">
+    <div class="spinner @GetSizeClass()"></div>
+    @if (!string.IsNullOrWhiteSpace(Message))
+    {
+        <span class="spinner-message">@Message</span>
+    }
+</div>
+
+<style>
+    .spinner-container {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-sm);
+        font-family: var(--font-family-base);
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-sm);
+    }
+
+    .spinner-container.centered {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: var(--space-xl);
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .spinner {
+        border-radius: var(--radius-full);
+        border: 2px solid var(--color-border);
+        border-top-color: var(--color-accent);
+        animation: spin-animation 0.8s linear infinite;
+    }
+
+    .spinner.size-sm {
+        width: 16px;
+        height: 16px;
+        border-width: 2px;
+    }
+
+    .spinner.size-md {
+        width: 28px;
+        height: 28px;
+        border-width: 3px;
+    }
+
+    .spinner.size-lg {
+        width: 44px;
+        height: 44px;
+        border-width: 4px;
+    }
+
+    @@keyframes spin-animation {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
+@code {
+    [Parameter]
+    public string Size { get; set; } = "md";
+
+    [Parameter]
+    public bool IsCentered { get; set; } = false;
+
+    [Parameter]
+    public string? Message { get; set; }
+
+    private string GetSizeClass() => Size.ToLowerInvariant() switch
+    {
+        "sm" => "size-sm",
+        "lg" => "size-lg",
+        _ => "size-md"
+    };
+}

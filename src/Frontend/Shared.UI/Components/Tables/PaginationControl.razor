@@ -1,0 +1,129 @@
+@namespace EstrelaClick.Frontend.Shared.UI.Components.Tables
+
+<div class="pagination-wrapper" role="navigation" aria-label="Paginação">
+    <div class="pagination-summary">
+        Exibindo @StartItem a @EndItem de @TotalItems registros
+    </div>
+
+    <div class="pagination-actions">
+        <button type="button" 
+                class="btn-page btn-prev" 
+                disabled="@(CurrentPage <= 1)" 
+                @onclick="HandlePreviousPage"
+                aria-label="Página anterior">
+            <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14" aria-hidden="true">
+                <path fill-rule="evenodd" d="M9.78 12.78a.75.75 0 0 1-1.06 0L4.47 8.53a.75.75 0 0 1 0-1.06l4.25-4.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042L6.06 8l3.72 3.72a.75.75 0 0 1 0 1.06Z"/>
+            </svg>
+            <span>Anterior</span>
+        </button>
+
+        <span class="pagination-indicator">
+            @CurrentPage de @(TotalPages <= 0 ? 1 : TotalPages)
+        </span>
+
+        <button type="button" 
+                class="btn-page btn-next" 
+                disabled="@(CurrentPage >= TotalPages)" 
+                @onclick="HandleNextPage"
+                aria-label="Próxima página">
+            <span>Próxima</span>
+            <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14" aria-hidden="true">
+                <path fill-rule="evenodd" d="M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06Z"/>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<style>
+    .pagination-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--space-md) var(--space-lg);
+        border-top: 1px solid var(--color-border);
+        font-family: var(--font-family-base);
+        font-size: var(--font-size-sm);
+        color: var(--color-text-secondary);
+        background-color: var(--color-surface);
+        gap: var(--space-md);
+        flex-wrap: wrap;
+    }
+
+    .pagination-summary {
+        font-weight: var(--font-weight-normal);
+    }
+
+    .pagination-actions {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .pagination-indicator {
+        font-weight: var(--font-weight-medium);
+        color: var(--color-text-primary);
+        padding: 0 var(--space-xs);
+    }
+
+    .btn-page {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2xs);
+        padding: var(--space-xs) var(--space-sm);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background-color: var(--color-surface);
+        color: var(--color-text-primary);
+        font-family: var(--font-family-base);
+        font-size: var(--font-size-xs);
+        font-weight: var(--font-weight-medium);
+        cursor: pointer;
+        transition: background-color var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
+    }
+
+    .btn-page:hover:not(:disabled) {
+        background-color: var(--color-surface-hover);
+        border-color: var(--color-border-focus);
+    }
+
+    .btn-page:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public int CurrentPage { get; set; } = 1;
+
+    [Parameter]
+    public int TotalPages { get; set; } = 1;
+
+    [Parameter]
+    public int TotalItems { get; set; } = 0;
+
+    [Parameter]
+    public int PageSize { get; set; } = 10;
+
+    [Parameter]
+    public EventCallback<int> OnPageChanged { get; set; }
+
+    private int StartItem => TotalItems == 0 ? 0 : ((CurrentPage - 1) * PageSize) + 1;
+    private int EndItem => Math.Min(CurrentPage * PageSize, TotalItems);
+
+    private async Task HandlePreviousPage()
+    {
+        if (CurrentPage > 1 && OnPageChanged.HasDelegate)
+        {
+            await OnPageChanged.InvokeAsync(CurrentPage - 1);
+        }
+    }
+
+    private async Task HandleNextPage()
+    {
+        if (CurrentPage < TotalPages && OnPageChanged.HasDelegate)
+        {
+            await OnPageChanged.InvokeAsync(CurrentPage + 1);
+        }
+    }
+}

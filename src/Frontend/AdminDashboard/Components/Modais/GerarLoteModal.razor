@@ -1,0 +1,93 @@
+@inject IAdminApiClient ApiClient
+
+<ConfirmationModal IsOpen="@IsOpen"
+                   Title="Gerar Novo Lote de Placas"
+                   ConfirmButtonText="@(IsSubmitting ? "Gerando..." : "Confirmar e Gerar")"
+                   CancelButtonText="Cancelar"
+                   OnConfirm="HandleConfirmAsync"
+                   OnCancel="HandleCancelAsync">
+    <div style="display: flex; flex-direction: column; gap: var(--space-md); margin-top: var(--space-sm);">
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="alert-token alert-token-danger">
+                <span>@ErrorMessage</span>
+            </div>
+        }
+
+        <FormInputText Id="lote-prefixo"
+                       Label="Identificador do Lote"
+                       Placeholder="Ex: LOTE-2026-001"
+                       Value="@NumeroLote"
+                       ValueChanged="@(v => NumeroLote = v)"
+                       HelpText="Código único para identificar a remessa física na esteira e nos arquivos compactados." />
+
+        <FormInputText Id="lote-quantidade"
+                       Label="Quantidade de Placas"
+                       Type="number"
+                       Placeholder="Ex: 50"
+                       Value="@QuantidadeTexto"
+                       ValueChanged="@(v => QuantidadeTexto = v)"
+                       HelpText="Quantidade de placas com slugs aleatórios seguros a serem geradas." />
+    </div>
+</ConfirmationModal>
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<LoteCriadoDto> OnLoteCriado { get; set; }
+
+    public string NumeroLote { get; set; } = $"LOTE-{DateTime.UtcNow:yyyyMMdd}-{Random.Shared.Next(100, 999)}";
+    public string QuantidadeTexto { get; set; } = "50";
+    public string? ErrorMessage { get; set; }
+    public bool IsSubmitting { get; set; }
+
+    private async Task HandleConfirmAsync()
+    {
+        if (IsSubmitting) return;
+
+        if (string.IsNullOrWhiteSpace(NumeroLote))
+        {
+            ErrorMessage = "O número do lote é obrigatório.";
+            return;
+        }
+
+        if (!int.TryParse(QuantidadeTexto, out var quantidade) || quantidade <= 0 || quantidade > 10000)
+        {
+            ErrorMessage = "A quantidade deve ser um número inteiro entre 1 e 10.000.";
+            return;
+        }
+
+        IsSubmitting = true;
+        ErrorMessage = null;
+
+        var result = await ApiClient.GerarLoteAsync(NumeroLote.Trim().ToUpperInvariant(), quantidade);
+        IsSubmitting = false;
+
+        if (result.IsSuccess && result.Value is not null)
+        {
+            await OnLoteCriado.InvokeAsync(result.Value);
+            await FecharAsync();
+        }
+        else
+        {
+            ErrorMessage = result.Error.Description;
+        }
+    }
+
+    private async Task HandleCancelAsync()
+    {
+        ErrorMessage = null;
+        await FecharAsync();
+    }
+
+    private async Task FecharAsync()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+    }
+}

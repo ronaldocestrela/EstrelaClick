@@ -1,0 +1,204 @@
+@page "/analytics"
+@rendermode InteractiveServer
+@inject IClientApiClient ClientApi
+
+<PageTitle>Analytics & Toques - EstrelaClick</PageTitle>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl); flex-wrap: wrap; gap: var(--space-md);">
+    <div>
+        <h2 style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); margin-bottom: var(--space-2xs);">
+            Analytics & Métricas de Toque
+        </h2>
+        <p style="color: var(--color-text-secondary); font-size: var(--font-size-sm);">
+            Acompanhe o engajamento físico de clientes, horários de pico e perfis de dispositivo na sua loja.
+        </p>
+    </div>
+
+    <div style="display: flex; gap: var(--space-xs);">
+        <button type="button"
+                class="@(_diasSelecionados == 7 ? "btn-token-primary" : "btn-token-secondary")"
+                @onclick="@(() => MudarPeriodoAsync(7))">
+            Últimos 7 dias
+        </button>
+        <button type="button"
+                class="@(_diasSelecionados == 30 ? "btn-token-primary" : "btn-token-secondary")"
+                @onclick="@(() => MudarPeriodoAsync(30))">
+            Últimos 30 dias
+        </button>
+        <button type="button"
+                class="@(_diasSelecionados == 90 ? "btn-token-primary" : "btn-token-secondary")"
+                @onclick="@(() => MudarPeriodoAsync(90))">
+            Últimos 90 dias
+        </button>
+    </div>
+</div>
+
+@if (_carregando)
+{
+    <div style="padding: var(--space-2xl); text-align: center;">
+        <LoadingSpinner Message="Computando analytics e gráficos..." IsCentered="true" />
+    </div>
+}
+else if (_analytics is null || _analytics.TotalToquesPeriodo == 0)
+{
+    <div class="card-panel" style="text-align: center; padding: var(--space-2xl);">
+        <EmptyState Title="Ainda sem registros de toques"
+                    Description="Assim que os primeiros clientes aproximarem o celular ou escanearem o QR Code da placa, as métricas e gráficos aparecerão aqui em tempo real." />
+    </div>
+}
+else
+{
+    <div class="metrics-grid">
+        <MetricCard Title="Total de Toques no Período"
+                    Value="@_analytics.TotalToquesPeriodo.ToString("N0")"
+                    Subtitle="@($"Período de {_diasSelecionados} dias")">
+            <Icon>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+            </Icon>
+        </MetricCard>
+
+        <MetricCard Title="Toques Hoje"
+                    Value="@_analytics.TotalToquesHoje.ToString("N0")"
+                    Subtitle="Acessos registrados nas últimas 24h">
+            <Icon>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </Icon>
+        </MetricCard>
+
+        <MetricCard Title="Média Diária"
+                    Value="@_analytics.MediaDiariaToques.ToString("F1")"
+                    Subtitle="Média diária de interações de clientes">
+            <Icon>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10"/>
+                    <line x1="12" y1="20" x2="12" y2="4"/>
+                    <line x1="6" y1="20" x2="6" y2="14"/>
+                </svg>
+            </Icon>
+        </MetricCard>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-xl); margin-bottom: var(--space-xl);">
+        <div class="card-panel">
+            <div class="card-panel-header">
+                <h3 class="card-panel-title">Horários de Pico (Distribuição por Hora do Dia)</h3>
+                <span style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">00h às 23h</span>
+            </div>
+
+            <div class="analytics-bar-chart">
+                @for (int h = 0; h < 24; h++)
+                {
+                    var hora = h;
+                    var item = _analytics.ToquesPorHora.FirstOrDefault(th => th.Hora == hora);
+                    var total = item?.TotalToques ?? 0;
+                    var maxToques = Math.Max(_analytics.ToquesPorHora.Max(th => th.TotalToques), 1);
+                    var percentual = (total * 100.0) / maxToques;
+
+                    <div class="analytics-bar-item">
+                        @if (total > 0)
+                        {
+                            <span class="analytics-bar-value">@total</span>
+                        }
+                        <div class="analytics-bar-fill" style="height: @(Math.Max(percentual, 3))%;" title="@($"{hora:D2}:00 - {total} toques")"></div>
+                        <span class="analytics-bar-label">@hora</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card-panel">
+            <div class="card-panel-header">
+                <h3 class="card-panel-title">Distribuição de Dispositivos</h3>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: var(--space-md); padding-top: var(--space-sm);">
+                @foreach (var disp in _analytics.Dispositivos)
+                {
+                    <div>
+                        <div style="display: flex; justify-content: space-between; font-size: var(--font-size-sm); margin-bottom: 4px;">
+                            <span style="font-weight: 500;">@disp.Categoria</span>
+                            <span style="color: var(--color-text-secondary);">@disp.Total (@disp.Percentual.ToString("F1")%)</span>
+                        </div>
+                        <div style="width: 100%; height: 8px; background-color: var(--color-surface-hover); border-radius: var(--radius-full); overflow: hidden;">
+                            <div style="width: @(disp.Percentual)%; height: 100%; background-color: var(--color-accent); border-radius: var(--radius-full);"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="card-panel">
+        <div class="card-panel-header">
+            <h3 class="card-panel-title">Últimos Acessos Físicos Registrados</h3>
+            <span style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">Privacidade garantida conforme LGPD</span>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: var(--font-size-sm);">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--color-border); text-align: left; color: var(--color-text-secondary);">
+                    <th style="padding: var(--space-sm);">Data & Hora</th>
+                    <th style="padding: var(--space-sm);">Dispositivo / SO</th>
+                    <th style="padding: var(--space-sm);">Origem</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var acesso in _analytics.UltimosAcessos)
+                {
+                    <tr style="border-bottom: 1px solid var(--color-border-subtle);">
+                        <td style="padding: var(--space-sm);">@acesso.DataHoraUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</td>
+                        <td style="padding: var(--space-sm);">
+                            <span class="badge" style="background-color: var(--color-surface-hover); padding: 2px 8px; border-radius: 4px;">
+                                @acesso.Dispositivo
+                            </span>
+                        </td>
+                        <td style="padding: var(--space-sm); color: var(--color-text-secondary);">
+                            @(string.IsNullOrWhiteSpace(acesso.OrigemReferer) ? "NFC Direto / QR Code" : acesso.OrigemReferer)
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private AnalyticsDto? _analytics;
+    private bool _carregando = true;
+    private int _diasSelecionados = 30;
+
+    private Guid _empresaIdAtual = Guid.Parse("00000000-0000-0000-0000-000000000001");
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarAnalyticsAsync();
+    }
+
+    private async Task MudarPeriodoAsync(int dias)
+    {
+        _diasSelecionados = dias;
+        await CarregarAnalyticsAsync();
+    }
+
+    private async Task CarregarAnalyticsAsync()
+    {
+        _carregando = true;
+        try
+        {
+            var result = await ClientApi.ObterAnalyticsAsync(_empresaIdAtual, dias: _diasSelecionados);
+            if (result.IsSuccess)
+            {
+                _analytics = result.Value;
+            }
+        }
+        finally
+        {
+            _carregando = false;
+        }
+    }
+}

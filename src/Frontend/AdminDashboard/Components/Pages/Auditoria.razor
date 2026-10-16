@@ -1,0 +1,168 @@
+@page "/auditoria"
+@inject IAdminApiClient ApiClient
+
+<PageTitle>Auditoria NFC & Slugs | EstrelaClick</PageTitle>
+
+<div style="display: flex; flex-direction: column; gap: var(--space-xl);">
+    <div>
+        <h2 style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--color-text-primary);">Rastreabilidade & Auditoria</h2>
+        <p style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">Consulte a integridade e histórico de qualquer placa física pelo chip UID (lido por NFC) ou Slug de 32 caracteres.</p>
+    </div>
+
+    <div class="card-panel">
+        <form @onsubmit="BuscarPlacaAsync" style="display: flex; gap: var(--space-md); align-items: flex-end; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 280px;">
+                <FormInputText Id="termo-auditoria"
+                               Label="Slug da Placa ou Chip UID (NFC)"
+                               Placeholder="Ex: 04:A1:B2:C3:D4:E5:60 ou b5f13451737e42999e52c80db0ca3d9c"
+                               Value="@TermoBusca"
+                               ValueChanged="@(v => TermoBusca = v)" />
+            </div>
+
+            <button type="submit" class="btn-token-primary" style="height: 42px;" disabled="@IsBuscando">
+                @if (IsBuscando)
+                {
+                    <LoadingSpinner Size="sm" />
+                    <span>Buscando...</span>
+                }
+                else
+                {
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <span>Auditar Placa</span>
+                }
+            </button>
+        </form>
+
+        @if (!string.IsNullOrWhiteSpace(MensagemErro))
+        {
+            <div class="alert-token alert-token-danger" style="margin-top: var(--space-md);">
+                <span>@MensagemErro</span>
+            </div>
+        }
+    </div>
+
+    @if (PlacaAuditada is not null)
+    {
+        <div class="card-panel" style="display: flex; flex-direction: column; gap: var(--space-lg);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding-bottom: var(--space-md); flex-wrap: wrap; gap: var(--space-sm);">
+                <div>
+                    <span style="font-size: var(--font-size-xs); color: var(--color-text-muted); text-transform: uppercase; font-weight: var(--font-weight-bold);">Identificador da Placa</span>
+                    <h3 style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); font-family: monospace; color: var(--color-text-primary);">
+                        @PlacaAuditada.Slug
+                    </h3>
+                </div>
+
+                <div>
+                    <PlacaStatusBadge Status="@PlacaAuditada.Status" />
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-md);">
+                <div style="padding: var(--space-md); background-color: var(--color-background); border-radius: var(--radius-md);">
+                    <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">Chip UID Físico (NFC)</div>
+                    <div style="font-weight: var(--font-weight-semibold); font-family: monospace; margin-top: var(--space-2xs); color: var(--color-text-primary);">
+                        @(PlacaAuditada.ChipUid ?? "Aguardando gravação física")
+                    </div>
+                </div>
+
+                <div style="padding: var(--space-md); background-color: var(--color-background); border-radius: var(--radius-md);">
+                    <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">Lote Fabril</div>
+                    <div style="font-weight: var(--font-weight-semibold); margin-top: var(--space-2xs); color: var(--color-text-primary);">
+                        @PlacaAuditada.NumeroLote
+                    </div>
+                </div>
+
+                <div style="padding: var(--space-md); background-color: var(--color-background); border-radius: var(--radius-md);">
+                    <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">Cliente Lojista</div>
+                    <div style="font-weight: var(--font-weight-semibold); margin-top: var(--space-2xs); color: var(--color-text-primary);">
+                        @(PlacaAuditada.EmpresaRazaoSocial ?? "Sem vínculo (Em estoque)")
+                    </div>
+                </div>
+
+                <div style="padding: var(--space-md); background-color: var(--color-background); border-radius: var(--radius-md);">
+                    <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">Total de Acessos (Redirecionamentos)</div>
+                    <div style="font-weight: var(--font-weight-bold); font-size: var(--font-size-lg); color: var(--color-accent); margin-top: var(--space-2xs);">
+                        @PlacaAuditada.TotalAcessos.ToString("N0")
+                    </div>
+                </div>
+            </div>
+
+            <div style="padding: var(--space-md); border: 1px dashed var(--color-border); border-radius: var(--radius-md); background-color: var(--color-surface);">
+                <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: var(--space-2xs);">URL de Destino Dinâmica</div>
+                <div style="font-family: monospace; word-break: break-all; color: var(--color-text-primary);">
+                    @(PlacaAuditada.UrlDestino ?? "Não configurada (Redirecionamento virgem)")
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
+                <h4 style="font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--color-text-secondary); text-transform: uppercase;">Linha do Tempo Fabril</h4>
+                <ul style="list-style: none; display: flex; flex-direction: column; gap: var(--space-sm); font-size: var(--font-size-sm);">
+                    <li style="display: flex; gap: var(--space-sm); align-items: center;">
+                        <span style="color: var(--color-success); font-weight: bold;">✔</span>
+                        <span><strong>Criação em Lote:</strong> @PlacaAuditada.DataCriacaoUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</span>
+                    </li>
+                    <li style="display: flex; gap: var(--space-sm); align-items: center;">
+                        @if (PlacaAuditada.DataGravacaoUtc.HasValue)
+                        {
+                            <span style="color: var(--color-success); font-weight: bold;">✔</span>
+                            <span><strong>Gravação NDEF em Bancada:</strong> @PlacaAuditada.DataGravacaoUtc.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss") @(!string.IsNullOrWhiteSpace(PlacaAuditada.OperadorReservaId) ? $"por {PlacaAuditada.OperadorReservaId}" : "")</span>
+                        }
+                        else
+                        {
+                            <span style="color: var(--color-neutral); font-weight: bold;">○</span>
+                            <span style="color: var(--color-text-muted);">Gravação física pendente</span>
+                        }
+                    </li>
+                    <li style="display: flex; gap: var(--space-sm); align-items: center;">
+                        @if (PlacaAuditada.DataAtivacaoUtc.HasValue)
+                        {
+                            <span style="color: var(--color-success); font-weight: bold;">✔</span>
+                            <span><strong>Ativação pelo Lojista:</strong> @PlacaAuditada.DataAtivacaoUtc.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</span>
+                        }
+                        else
+                        {
+                            <span style="color: var(--color-neutral); font-weight: bold;">○</span>
+                            <span style="color: var(--color-text-muted);">Aguardando primeiro acesso / vinculação</span>
+                        }
+                    </li>
+                </ul>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    public string TermoBusca { get; set; } = string.Empty;
+    public bool IsBuscando { get; set; }
+    public string? MensagemErro { get; set; }
+    public PlacaAuditoriaDto? PlacaAuditada { get; set; }
+
+    private async Task BuscarPlacaAsync()
+    {
+        if (string.IsNullOrWhiteSpace(TermoBusca))
+        {
+            MensagemErro = "Informe o Slug ou Chip UID para auditar.";
+            PlacaAuditada = null;
+            return;
+        }
+
+        IsBuscando = true;
+        MensagemErro = null;
+
+        var result = await ApiClient.ConsultarAuditoriaAsync(TermoBusca.Trim());
+        IsBuscando = false;
+
+        if (result.IsSuccess && result.Value is not null)
+        {
+            PlacaAuditada = result.Value;
+        }
+        else
+        {
+            PlacaAuditada = null;
+            MensagemErro = result.Error.Description;
+        }
+    }
+}

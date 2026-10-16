@@ -1,0 +1,224 @@
+@namespace EstrelaClick.Frontend.Shared.UI.Components.Modals
+
+@if (IsOpen)
+{
+    <div class="modal-backdrop" @onclick="HandleBackdropClick" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-dialog" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h3 id="modal-title" class="modal-title">@Title</h3>
+                <button type="button" class="btn-close" aria-label="Fechar" @onclick="HandleCancel">
+                    <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16" aria-hidden="true">
+                        <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l3.22 3.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-3.22 3.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                @if (!string.IsNullOrWhiteSpace(Message))
+                {
+                    <p class="modal-message">@Message</p>
+                }
+                @ChildContent
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" @onclick="HandleCancel">
+                    @CancelButtonText
+                </button>
+                <button type="button" class="btn btn-confirm @(IsDestructive ? "btn-danger" : "btn-primary")" @onclick="HandleConfirm">
+                    @ConfirmButtonText
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: var(--color-backdrop);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: var(--space-md);
+        box-sizing: border-box;
+    }
+
+    .modal-dialog {
+        background-color: var(--color-surface-modal);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-modal);
+        width: 100%;
+        max-width: 480px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        animation: modal-appear var(--transition-fast) ease-out;
+    }
+
+    @@keyframes modal-appear {
+        from {
+            opacity: 0;
+            transform: scale(0.96) translateY(-8px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--space-md) var(--space-lg);
+        border-bottom: 1px solid var(--color-border-subtle);
+    }
+
+    .modal-title {
+        margin: 0;
+        font-family: var(--font-family-base);
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-text-primary);
+    }
+
+    .btn-close {
+        background: transparent;
+        border: none;
+        color: var(--color-text-muted);
+        cursor: pointer;
+        padding: var(--space-2xs);
+        border-radius: var(--radius-sm);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: color var(--transition-fast), background-color var(--transition-fast);
+    }
+
+    .btn-close:hover {
+        color: var(--color-text-primary);
+        background-color: var(--color-surface-hover);
+    }
+
+    .modal-body {
+        padding: var(--space-lg);
+        color: var(--color-text-secondary);
+        font-family: var(--font-family-base);
+        font-size: var(--font-size-base);
+        line-height: var(--line-height-normal);
+    }
+
+    .modal-message {
+        margin: 0;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--space-sm);
+        padding: var(--space-md) var(--space-lg);
+        border-top: 1px solid var(--color-border-subtle);
+        background-color: var(--color-surface);
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-xs) var(--space-md);
+        border-radius: var(--radius-md);
+        font-family: var(--font-family-base);
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-medium);
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition: background-color var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
+    }
+
+    .btn-cancel {
+        background-color: transparent;
+        color: var(--color-text-secondary);
+        border-color: var(--color-border);
+    }
+
+    .btn-cancel:hover {
+        background-color: var(--color-surface-hover);
+        color: var(--color-text-primary);
+    }
+
+    .btn-primary {
+        background-color: var(--color-accent);
+        color: var(--color-text-inverse);
+    }
+
+    .btn-primary:hover {
+        background-color: var(--color-accent-hover);
+    }
+
+    .btn-danger {
+        background-color: var(--color-danger);
+        color: var(--color-text-inverse);
+    }
+
+    .btn-danger:hover {
+        opacity: 0.9;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; } = false;
+
+    [Parameter]
+    public string Title { get; set; } = "Confirmação";
+
+    [Parameter]
+    public string? Message { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string ConfirmButtonText { get; set; } = "Confirmar";
+
+    [Parameter]
+    public string CancelButtonText { get; set; } = "Cancelar";
+
+    [Parameter]
+    public bool IsDestructive { get; set; } = false;
+
+    [Parameter]
+    public bool CloseOnBackdropClick { get; set; } = true;
+
+    [Parameter]
+    public EventCallback OnConfirm { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private async Task HandleConfirm()
+    {
+        if (OnConfirm.HasDelegate)
+            await OnConfirm.InvokeAsync();
+    }
+
+    private async Task HandleCancel()
+    {
+        if (OnCancel.HasDelegate)
+            await OnCancel.InvokeAsync();
+    }
+
+    private async Task HandleBackdropClick()
+    {
+        if (CloseOnBackdropClick && OnCancel.HasDelegate)
+            await OnCancel.InvokeAsync();
+    }
+}
