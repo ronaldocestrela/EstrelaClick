@@ -2,8 +2,12 @@ using EstrelaClick.Backend.Api.Endpoints;
 using EstrelaClick.Backend.Application;
 using EstrelaClick.Backend.Infrastructure;
 using EstrelaClick.Backend.Infrastructure.Persistence;
+using EstrelaClick.Shared.SharedKernel.Configuration;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
+
+// Carrega variáveis de ambiente do arquivo .env (se presente)
+DotEnv.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 

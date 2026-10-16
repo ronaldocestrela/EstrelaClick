@@ -1,5 +1,9 @@
 using EstrelaClick.Frontend.AdminDashboard.Components;
 using EstrelaClick.Frontend.AdminDashboard.Services;
+using EstrelaClick.Shared.SharedKernel.Configuration;
+
+// Carrega variáveis de ambiente do arquivo .env (se presente)
+DotEnv.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 

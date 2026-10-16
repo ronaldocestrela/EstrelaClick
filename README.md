@@ -3,7 +3,7 @@
 [![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![C# 14](https://img.shields.io/badge/C%23-14-239120?logo=csharp&logoColor=white)](https://learn.microsoft.com/dotnet/csharp/)
 [![Clean Architecture](https://img.shields.io/badge/Architecture-Clean%20%2F%20Hexagonal-blue)](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
-[![TDD](https://img.shields.io/badge/Tests-TDD%20(219%2B%20Passing)-brightgreen)](file:///tests/UnitTests)
+[![TDD](https://img.shields.io/badge/Tests-TDD%20(233%2B%20Passing)-brightgreen)](file:///tests/UnitTests)
 [![Blazor Server](https://img.shields.io/badge/Frontend-Blazor%20Server-512BD4?logo=blazor&logoColor=white)](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor)
 [![.NET MAUI](https://img.shields.io/badge/Mobile-.NET%20MAUI%20(NFC)-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/apps/maui)
 [![Documentation](https://img.shields.io/badge/Docs-Scalar%20OpenAPI-orange)](http://localhost:5000/scalar/v1)
@@ -196,6 +196,8 @@ Todas as decisões arquiteturais fundamentais da plataforma estão formalizadas 
 | [0012](file:///docs/adrs/0012-biblioteca-compartilhada-design-tokens-ui.md) | Biblioteca Compartilhada de Componentes UI e Design Tokens | Aprovado |
 | [0013](file:///docs/adrs/0013-dashboard-gestao-interna-admin.md) | Arquitetura e Telas do Dashboard Administrativo Interno | Aprovado |
 | [0014](file:///docs/adrs/0014-dashboard-cliente-lojista-onboarding-analytics.md) | Dashboard do Cliente Lojista: Onboarding, Edição e Analytics | Aprovado |
+| [0015](file:///docs/adrs/0015-execucao-migrations-arranque-api.md) | Execução Automática de Migrações do EF Core no Arranque da API | Aprovado |
+| [0016](file:///docs/adrs/0016-carregamento-variaveis-ambiente-dotenv.md) | Carregamento de Variáveis de Ambiente via Arquivo .env | Aprovado |
 
 ---
 
@@ -245,9 +247,21 @@ dotnet restore
 dotnet build
 ```
 
+### Configurar Variáveis de Ambiente (.env)
+Copie o arquivo modelo `.env.example` para `.env` na raiz do repositório:
+```powershell
+# Windows (PowerShell)
+Copy-Item .env.example .env
+
+# Linux / macOS (Bash)
+cp .env.example .env
+```
+O arquivo `.env` já contém valores padrão adequados para desenvolvimento local. As aplicações (Backend API, Admin Dashboard e Client Dashboard) carregam este arquivo automaticamente no arranque.
+
 ### Configurar Banco de Dados e Migrations
-1. Configure sua string de conexão no arquivo `src/Backend/Api/appsettings.Development.json`.
-2. Aplique as migrações no banco de dados:
+1. Se necessário, ajuste a string de conexão no `.env` (`ConnectionStrings__DefaultConnection`).
+2. Por padrão, a API executa migrações pendentes automaticamente ao iniciar (`Database__AutoMigrate=true`).
+3. Alternativamente, para aplicar migrações via CLI:
    ```powershell
    dotnet ef database update --project src/Backend/Infrastructure --startup-project src/Backend/Api
    ```
