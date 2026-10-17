@@ -64,3 +64,15 @@ public sealed record LoteCriadoDto(
     DateTime DataCriacaoUtc,
     IReadOnlyList<string> Slugs
 );
+
+public sealed record AdminLoginRequest(
+    string Usuario,
+    string Senha,
+    bool LembrarMe = false
+);
+
+public sealed record AdminAuthSuccessDto(
+    string Usuario,
+    string Role,
+    DateTime AutenticadoEmUtc
+);
