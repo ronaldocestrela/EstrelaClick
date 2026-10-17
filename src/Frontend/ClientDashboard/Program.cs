@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-var apiBaseUrl = builder.Configuration["Api:BaseUrl"] ?? "https://localhost:7157";
+var apiBaseUrl = builder.Configuration["Api:BaseUrl"] ?? "http://localhost:5180";
 
 builder.Services.AddHttpClient<IClientApiClient, ClientApiClient>(client =>
 {

@@ -11,8 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-var apiBaseUrl = builder.Configuration["Api:BaseUrl"] ?? "https://localhost:7157";
-var apiKey = builder.Configuration["Api:ApiKey"] ?? "EstrelaClick-Secret-Factory-ApiKey-2026";
+var apiBaseUrl = builder.Configuration["Api:BaseUrl"] ?? "http://localhost:5180";
+var apiKey = builder.Configuration["Api:ApiKey"] ?? "dev-factory-secret-key-2026";
 
 builder.Services.AddHttpClient<IAdminApiClient, AdminApiClient>(client =>
 {
