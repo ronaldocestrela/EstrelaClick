@@ -1,0 +1,64 @@
+services:
+  # =========================================================================
+  # 1. SQL Server 2022 (Banco de Dados Relacional Principal & Identity)
+  # =========================================================================
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: estrelaclick-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-Your_strong_password123}
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$${MSSQL_SA_PASSWORD:-Your_strong_password123}\" -C -Q \"SELECT 1\" || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$${MSSQL_SA_PASSWORD:-Your_strong_password123}\" -Q \"SELECT 1\""
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - estrelaclick-network
+
+  # =========================================================================
+  # 2. Redis 7 (Cache Distribuído L2 para Redirecionamento & Alta Performance)
+  # =========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: estrelaclick-redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - estrelaclick-network
+
+# =========================================================================
+# Volumes Persistentes
+# =========================================================================
+volumes:
+  sqlserver_data:
+    name: estrelaclick_sqlserver_data
+  redis_data:
+    name: estrelaclick_redis_data
+
+# =========================================================================
+# Redes
+# =========================================================================
+networks:
+  estrelaclick-network:
+    name: estrelaclick_dev_network
+    driver: bridge

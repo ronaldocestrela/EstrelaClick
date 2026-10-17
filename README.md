@@ -198,6 +198,7 @@ Todas as decisões arquiteturais fundamentais da plataforma estão formalizadas 
 | [0014](file:///docs/adrs/0014-dashboard-cliente-lojista-onboarding-analytics.md) | Dashboard do Cliente Lojista: Onboarding, Edição e Analytics | Aprovado |
 | [0015](file:///docs/adrs/0015-execucao-migrations-arranque-api.md) | Execução Automática de Migrações do EF Core no Arranque da API | Aprovado |
 | [0016](file:///docs/adrs/0016-carregamento-variaveis-ambiente-dotenv.md) | Carregamento de Variáveis de Ambiente via Arquivo .env | Aprovado |
+| [0017](file:///docs/adrs/0017-docker-compose-servicos-desenvolvimento.md) | Docker Compose para Serviços de Apoio em Desenvolvimento Local | Aprovado |
 
 ---
 
@@ -233,7 +234,7 @@ Acompanhamento detalhado segundo o [inidial_roadmap.md](file:///inidial_roadmap.
 
 ### Pré-requisitos
 * [.NET 10 SDK](https://dotnet.microsoft.com/) (v10.0.400+)
-* [SQL Server 2022+](https://www.microsoft.com/sql-server) ou Azure SQL Edge
+* [Docker Desktop](https://www.docker.com/) ou Docker Engine com Docker Compose
 * Carga de trabalho .NET MAUI (caso deseje compilar o aplicativo móvel):
   ```powershell
   dotnet workload install maui
@@ -258,10 +259,19 @@ cp .env.example .env
 ```
 O arquivo `.env` já contém valores padrão adequados para desenvolvimento local. As aplicações (Backend API, Admin Dashboard e Client Dashboard) carregam este arquivo automaticamente no arranque.
 
+### Iniciar Serviços de Infraestrutura (Docker Compose)
+Inicie o SQL Server 2022 e o Redis 7 em segundo plano com um único comando:
+```powershell
+docker compose up -d
+```
+Para verificar a saúde dos serviços em execução:
+```powershell
+docker compose ps
+```
+
 ### Configurar Banco de Dados e Migrations
-1. Se necessário, ajuste a string de conexão no `.env` (`ConnectionStrings__DefaultConnection`).
-2. Por padrão, a API executa migrações pendentes automaticamente ao iniciar (`Database__AutoMigrate=true`).
-3. Alternativamente, para aplicar migrações via CLI:
+1. Por padrão, a API executa migrações pendentes automaticamente ao iniciar (`Database__AutoMigrate=true`).
+2. Alternativamente, para aplicar migrações via CLI:
    ```powershell
    dotnet ef database update --project src/Backend/Infrastructure --startup-project src/Backend/Api
    ```
