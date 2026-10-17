@@ -1,9 +1,13 @@
 @inherits LayoutComponentBase
-@inject IJSRuntime JS
 
 <div class="auth-layout-container">
     <header class="auth-topbar">
-        <button type="button" class="btn-token-icon" @onclick="ToggleThemeAsync" title="Alternar Modo Escuro/Claro" aria-label="Alternar Tema">
+        <button type="button" 
+                id="theme-toggle-btn"
+                class="btn-token-icon" 
+                onclick="toggleTheme()" 
+                title="Alternar Modo Escuro/Claro" 
+                aria-label="Alternar Tema">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="5"/>
                 <line x1="12" y1="1" x2="12" y2="3"/>
@@ -60,17 +64,3 @@
         color: var(--color-text-muted);
     }
 </style>
-
-@code {
-    private async Task ToggleThemeAsync()
-    {
-        try
-        {
-            await JS.InvokeVoidAsync("toggleTheme");
-        }
-        catch
-        {
-            // Fallback SSR inicial
-        }
-    }
-}

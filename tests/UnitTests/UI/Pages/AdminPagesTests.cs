@@ -1,4 +1,5 @@
 using Bunit;
+using EstrelaClick.Frontend.AdminDashboard.Components.Layout;
 using EstrelaClick.Frontend.AdminDashboard.Components.Modais;
 using EstrelaClick.Frontend.AdminDashboard.Components.Pages;
 using EstrelaClick.Frontend.AdminDashboard.Services;
@@ -110,6 +111,56 @@ public class AdminPagesTests : BunitContext
     }
 
     [Fact]
+    public async Task Home_QuandoClicarBotaoGerarLote_DeveAbrirModal()
+    {
+        // Arrange
+        var metricas = new MetricasFabricaDto(100, 50, 20, 10, 5, 2);
+        _apiClientMock.ObterMetricasFabricaAsync(Arg.Any<CancellationToken>())
+            .Returns(Result<MetricasFabricaDto>.Success(metricas));
+        _apiClientMock.ListarLotesAsync(Arg.Any<CancellationToken>())
+            .Returns(Result<IReadOnlyList<LoteItemDto>>.Success(new List<LoteItemDto>()));
+
+        var cut = Render<Home>();
+
+        // Act
+        var btnGerarLote = cut.Find("button#btn-gerar-lote");
+        await btnGerarLote.ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+        // Assert
+        cut.Markup.Should().Contain("Gerar Novo Lote de Placas");
+        cut.FindComponent<GerarLoteModal>().Instance.IsOpen.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Lotes_QuandoClicarBotaoGerarLote_DeveAbrirModal()
+    {
+        // Arrange
+        _apiClientMock.ListarLotesAsync(Arg.Any<CancellationToken>())
+            .Returns(Result<IReadOnlyList<LoteItemDto>>.Success(new List<LoteItemDto>()));
+
+        var cut = Render<Lotes>();
+
+        // Act
+        var btnGerarLote = cut.Find("button#btn-gerar-lote");
+        await btnGerarLote.ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+        // Assert
+        cut.Markup.Should().Contain("Gerar Novo Lote de Placas");
+        cut.FindComponent<GerarLoteModal>().Instance.IsOpen.Should().BeTrue();
+    }
+
+    [Fact]
+    public void AuthLayout_DeveRenderizarBotaoTemaComDisparoNativoJs()
+    {
+        // Act
+        var cut = Render<AuthLayout>();
+
+        // Assert
+        var btnTema = cut.Find("button#theme-toggle-btn");
+        btnTema.GetAttribute("onclick").Should().Be("toggleTheme()");
+    }
+
+    [Fact]
     public void Clientes_DeveRenderizarTabelaDeEmpresas()
     {
         // Arrange
@@ -126,6 +177,50 @@ public class AdminPagesTests : BunitContext
         // Assert
         cut.Markup.Should().Contain("Restaurante Estrela");
         cut.Markup.Should().Contain("restaurante@estrela.com");
+    }
+
+    [Fact]
+    public async Task Clientes_QuandoClicarBotaoNovoCliente_DeveAbrirModalDeCadastro()
+    {
+        // Arrange
+        _apiClientMock.ListarEmpresasAsync(Arg.Any<CancellationToken>())
+            .Returns(Result<IReadOnlyList<EmpresaDto>>.Success(new List<EmpresaDto>()));
+
+        var cut = Render<Clientes>();
+
+        // Act
+        var btnNovoCliente = cut.Find("button#btn-novo-cliente");
+        await btnNovoCliente.ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+        // Assert
+        cut.Markup.Should().Contain("Cadastrar Novo Cliente Lojista");
+        cut.FindComponent<CadastrarClienteModal>().Instance.IsOpen.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Clientes_QuandoClienteCadastrado_DeveAtualizarTabelaEExibirMensagemFeedback()
+    {
+        // Arrange
+        var empresasIniciais = new List<EmpresaDto>();
+        var novoCliente = new EmpresaDto(Guid.NewGuid(), "Nova Barbearia", "barbearia@teste.com", "(11) 98888-7777", true, DateTime.UtcNow, 0);
+        var empresasAtualizadas = new List<EmpresaDto> { novoCliente };
+
+        _apiClientMock.ListarEmpresasAsync(Arg.Any<CancellationToken>())
+            .Returns(
+                Result<IReadOnlyList<EmpresaDto>>.Success(empresasIniciais),
+                Result<IReadOnlyList<EmpresaDto>>.Success(empresasAtualizadas)
+            );
+
+        var cut = Render<Clientes>();
+
+        // Act - Simula o callback OnClienteCadastrado emitido pelo modal
+        var modal = cut.FindComponent<CadastrarClienteModal>();
+        await cut.InvokeAsync(() => modal.Instance.OnClienteCadastrado.InvokeAsync(novoCliente));
+
+        // Assert
+        cut.Markup.Should().Contain("Cliente 'Nova Barbearia' cadastrado com sucesso!");
+        cut.Markup.Should().Contain("Nova Barbearia");
+        cut.Markup.Should().Contain("barbearia@teste.com");
     }
 
     [Fact]
