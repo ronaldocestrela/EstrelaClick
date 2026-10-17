@@ -69,6 +69,13 @@
     [Parameter]
     public string? Message { get; set; }
 
+    [Parameter]
+    public string? Text
+    {
+        get => Message;
+        set => Message = value;
+    }
+
     private string GetSizeClass() => Size.ToLowerInvariant() switch
     {
         "sm" => "size-sm",

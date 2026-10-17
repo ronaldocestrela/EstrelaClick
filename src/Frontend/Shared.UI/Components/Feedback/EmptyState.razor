@@ -83,6 +83,13 @@
     public string? Description { get; set; }
 
     [Parameter]
+    public string? Message
+    {
+        get => Description;
+        set => Description = value;
+    }
+
+    [Parameter]
     public RenderFragment? Icon { get; set; }
 
     [Parameter]

@@ -57,6 +57,38 @@ public class AdminPagesTests : BunitContext
     }
 
     [Fact]
+    public void Home_QuandoCarregando_DeveRenderizarLoadingSpinnerSemExcecao()
+    {
+        // Arrange
+        var tcs = new TaskCompletionSource<Result<MetricasFabricaDto>>();
+        _apiClientMock.ObterMetricasFabricaAsync(Arg.Any<CancellationToken>())
+            .Returns(tcs.Task);
+
+        // Act
+        var cut = Render<Home>();
+
+        // Assert
+        cut.Markup.Should().Contain("Carregando estatísticas da fábrica...");
+    }
+
+    [Fact]
+    public void Home_QuandoSemLotes_DeveRenderizarEmptyStateSemExcecao()
+    {
+        // Arrange
+        var metricas = new MetricasFabricaDto(0, 0, 0, 0, 0, 0);
+        _apiClientMock.ObterMetricasFabricaAsync(Arg.Any<CancellationToken>())
+            .Returns(Result<MetricasFabricaDto>.Success(metricas));
+        _apiClientMock.ListarLotesAsync(Arg.Any<CancellationToken>())
+            .Returns(Result<IReadOnlyList<LoteItemDto>>.Success(new List<LoteItemDto>()));
+
+        // Act
+        var cut = Render<Home>();
+
+        // Assert
+        cut.Markup.Should().Contain("Nenhum lote criado");
+    }
+
+    [Fact]
     public void Lotes_DeveRenderizarTabelaELinkDownloadZip()
     {
         // Arrange

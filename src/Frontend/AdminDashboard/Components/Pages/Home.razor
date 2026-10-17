@@ -22,7 +22,7 @@
     @if (IsCarregando)
     {
         <div style="padding: var(--space-2xl); display: flex; justify-content: center;">
-            <LoadingSpinner Text="Carregando estatísticas da fábrica..." />
+            <LoadingSpinner Message="Carregando estatísticas da fábrica..." />
         </div>
     }
     else
@@ -58,7 +58,7 @@
             @if (!LotesRecentes.Any())
             {
                 <EmptyState Title="Nenhum lote criado"
-                            Message="Clique em 'Gerar Novo Lote' para iniciar a primeira remessa de placas." />
+                            Description="Clique em 'Gerar Novo Lote' para iniciar a primeira remessa de placas." />
             }
             else
             {
