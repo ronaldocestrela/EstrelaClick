@@ -25,6 +25,7 @@
     <ProjectReference Include="..\..\src\Backend\Domain\EstrelaClick.Backend.Domain.csproj" />
     <ProjectReference Include="..\..\src\Backend\Application\EstrelaClick.Backend.Application.csproj" />
     <ProjectReference Include="..\..\src\Backend\Infrastructure\EstrelaClick.Backend.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Backend\Api\EstrelaClick.Backend.Api.csproj" />
     <ProjectReference Include="..\..\src\Shared\SharedKernel\EstrelaClick.Shared.SharedKernel.csproj" />
     <ProjectReference Include="..\..\src\Frontend\Shared.UI\EstrelaClick.Frontend.Shared.UI.csproj" />
     <ProjectReference Include="..\..\src\Frontend\AdminDashboard\EstrelaClick.Frontend.AdminDashboard.csproj" />

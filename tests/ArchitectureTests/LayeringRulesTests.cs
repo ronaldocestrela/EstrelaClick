@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using NetArchTest.Rules;
 
 namespace EstrelaClick.Tests.ArchitectureTests;
@@ -15,7 +15,8 @@ public class LayeringRulesTests
                 "EstrelaClick.Backend.Application",
                 "EstrelaClick.Backend.Infrastructure",
                 "EstrelaClick.Backend.Api",
-                "Microsoft.EntityFrameworkCore")
+                "Microsoft.EntityFrameworkCore",
+                "Serilog")
             .GetResult();
 
         result.IsSuccessful.Should().BeTrue();
@@ -30,7 +31,8 @@ public class LayeringRulesTests
             .HaveDependencyOnAny(
                 "EstrelaClick.Backend.Infrastructure",
                 "EstrelaClick.Backend.Api",
-                "Microsoft.EntityFrameworkCore")
+                "Microsoft.EntityFrameworkCore",
+                "Serilog")
             .GetResult();
 
         result.IsSuccessful.Should().BeTrue();

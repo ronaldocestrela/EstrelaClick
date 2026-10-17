@@ -3,7 +3,7 @@
 [![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![C# 14](https://img.shields.io/badge/C%23-14-239120?logo=csharp&logoColor=white)](https://learn.microsoft.com/dotnet/csharp/)
 [![Clean Architecture](https://img.shields.io/badge/Architecture-Clean%20%2F%20Hexagonal-blue)](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
-[![TDD](https://img.shields.io/badge/Tests-TDD%20(233%2B%20Passing)-brightgreen)](file:///tests/UnitTests)
+[![TDD](https://img.shields.io/badge/Tests-TDD%20(236%2B%20Passing)-brightgreen)](file:///tests/UnitTests)
 [![Blazor Server](https://img.shields.io/badge/Frontend-Blazor%20Server-512BD4?logo=blazor&logoColor=white)](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor)
 [![.NET MAUI](https://img.shields.io/badge/Mobile-.NET%20MAUI%20(NFC)-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/apps/maui)
 [![Documentation](https://img.shields.io/badge/Docs-Scalar%20OpenAPI-orange)](http://localhost:5000/scalar/v1)
@@ -77,6 +77,7 @@ A engenharia do ecossistema adota a estratégia de **monólito modular** em uma 
 | **Painéis Web** | Blazor Server-Side (.NET 10) | Interatividade SSR rápida via SignalR com Dashboards segregados |
 | **Design System** | `Shared.UI` + `tokens.css` | Design Tokens CSS centralizados com suporte completo a Dark Mode |
 | **Operação de Bancada** | .NET MAUI (Android / iOS) | Integração com `NfcAdapter`, gravação contínua NDEF e feedback tátil/sonoro |
+| **Logging Estruturado** | Serilog (`Serilog.AspNetCore`) | Logs estruturados, enrichers contextuais, rotação diária de arquivo e request logging |
 | **Qualidade & Testes** | xUnit, FluentAssertions, Moq, NetArchTest | TDD estrito com validação de regras invariantes e fronteiras |
 
 ---
@@ -93,7 +94,7 @@ EstrelaClick/
 ├── EstrelaClick.slnx                   # Arquivo de solução XML unificado (.NET 10)
 │
 ├── docs/                               # Documentação viva de engenharia
-│   ├── adrs/                           # 14 Architectural Decision Records (ADRs)
+│   ├── adrs/                           # 18 Architectural Decision Records (ADRs)
 │   └── architecture/                   # Diagramas e fluxos de gravação NFC
 │
 ├── src/
@@ -199,6 +200,7 @@ Todas as decisões arquiteturais fundamentais da plataforma estão formalizadas 
 | [0015](file:///docs/adrs/0015-execucao-migrations-arranque-api.md) | Execução Automática de Migrações do EF Core no Arranque da API | Aprovado |
 | [0016](file:///docs/adrs/0016-carregamento-variaveis-ambiente-dotenv.md) | Carregamento de Variáveis de Ambiente via Arquivo .env | Aprovado |
 | [0017](file:///docs/adrs/0017-docker-compose-servicos-desenvolvimento.md) | Docker Compose para Serviços de Apoio em Desenvolvimento Local | Aprovado |
+| [0018](file:///docs/adrs/0018-padronizacao-logging-estruturado-serilog.md) | Padronização de Logging Estruturado com Serilog | Aprovado |
 
 ---
 
