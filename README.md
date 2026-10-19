@@ -24,7 +24,8 @@ O ecossistema permite que comércios físicos (restaurantes, clínicas, lojas e 
 6. [Registro de Decisões Arquiteturais (ADRs)](#6-registro-de-decisões-arquiteturais-adrs)
 7. [Status do Roadmap](#7-status-do-roadmap)
 8. [Primeiros Passos e Execução Local](#8-primeiros-passos-e-execução-local)
-9. [Qualidade e Suíte de Testes](#9-qualidade-e-suíte-de-testes)
+9. [Manual de Instruções de Uso](INSTRUCOES_DE_USO.md)
+10. [Qualidade e Suíte de Testes](#9-qualidade-e-suíte-de-testes)
 
 ---
 

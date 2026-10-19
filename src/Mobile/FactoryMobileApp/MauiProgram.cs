@@ -32,10 +32,15 @@ public static class MauiProgram
 		builder.Services.AddSingleton<EstrelaClick.Shared.SharedKernel.Mobile.IFactoryApiClient>(sp =>
 		{
 #if ANDROID
-			var baseUri = new Uri("http://10.0.2.2:5000");
+			// 10.0.2.2 é o alias padrão do emulador Android para o localhost da máquina hospedeira.
+			// Em dispositivos físicos via USB, utilize: 'adb reverse tcp:5180 tcp:5180' ou informe o IP local do host.
+			var defaultUrl = "http://10.0.2.2:5180";
 #else
-			var baseUri = new Uri("http://localhost:5000");
+			var defaultUrl = "http://localhost:5180";
 #endif
+			var configuredUrl = Microsoft.Maui.Storage.Preferences.Default.Get("ApiBaseUrl", defaultUrl);
+			var finalUrl = string.IsNullOrWhiteSpace(configuredUrl) ? defaultUrl : configuredUrl;
+			var baseUri = new Uri(finalUrl);
 			var httpClient = new HttpClient { BaseAddress = baseUri, Timeout = TimeSpan.FromSeconds(15) };
 			return new EstrelaClick.Shared.SharedKernel.Mobile.FactoryApiClient(httpClient, sp.GetRequiredService<EstrelaClick.Shared.SharedKernel.Mobile.IOperatorSessionService>());
 		});
