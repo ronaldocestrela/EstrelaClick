@@ -7,6 +7,8 @@ using EstrelaClick.Backend.Infrastructure.QrCode;
 using EstrelaClick.Backend.Infrastructure.Security;
 using EstrelaClick.Backend.Infrastructure.Telemetry;
 using EstrelaClick.Backend.Infrastructure.Workers;
+using EstrelaClick.Backend.Application.Common.Options;
+using EstrelaClick.Backend.Infrastructure.Email;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -85,6 +87,11 @@ public static class DependencyInjection
         // Repositórios
         services.AddScoped<IPlacaRepository, PlacaRepository>();
         services.AddScoped<IEmpresaRepository, EmpresaRepository>();
+
+        // Envio de E-mails via SMTP
+        services.Configure<SmtpOptions>(configuration.GetSection(SmtpOptions.SectionName));
+        services.AddTransient<ISmtpClientWrapper, MailKitSmtpClientWrapper>();
+        services.AddTransient<IEmailSender, SmtpEmailSender>();
 
         // Worker em segundo plano para persistência em lote
         services.AddHostedService<MetricasBatchProcessorWorker>();

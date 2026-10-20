@@ -46,6 +46,19 @@ services:
     networks:
       - estrelaclick-network
 
+  # =========================================================================
+  # 3. Mailpit (Servidor SMTP de Teste & UI Web de Inspeção de E-mails)
+  # =========================================================================
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: estrelaclick-mailpit
+    ports:
+      - "1025:1025" # Porta SMTP
+      - "8025:8025" # Interface Web (UI)
+    restart: unless-stopped
+    networks:
+      - estrelaclick-network
+
 # =========================================================================
 # Volumes Persistentes
 # =========================================================================
